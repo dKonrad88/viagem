@@ -232,6 +232,18 @@
     if(r.error){if(b){b.disabled=false;b.textContent='Entrar';}setStatus(/Invalid login/i.test(r.error.message)?'E-mail ou senha incorretos.':('Falha: '+r.error.message),'err');return;}
     user=r.data.user; boot();
   }
+  async function sbSignup(){
+    sbInit();if(!sb){toast('Sem conexão.');return;}
+    var email=($('#loEmail').value||'').trim().toLowerCase(), pass=($('#loPass').value||'');
+    if(!email||email.indexOf('@')<1){setStatus('Digite um e-mail válido.','err');return;}
+    if(pass.length<6){setStatus('A senha precisa de ao menos 6 caracteres.','err');return;}
+    var b=$('#loSignup');if(b){b.disabled=true;b.textContent='criando…';}
+    var r=await sb.auth.signUp({email:email,password:pass});
+    if(b){b.disabled=false;b.textContent='Criar conta';}
+    if(r.error){setStatus(/registered|already/i.test(r.error.message)?'Esse e-mail já tem conta — use Entrar.':('Falha: '+r.error.message),'err');return;}
+    if(r.data.session&&r.data.user){user=r.data.user;boot();}
+    else{setStatus('Conta criada! Confirme pelo e-mail e depois toque em Entrar.','ok');}
+  }
   function sbLogout(){ (sb?sb.auth.signOut():Promise.resolve()).then(function(){user=null;espacoId=null;dados={};closeCfg();render();toast('Saiu da conta.');}); }
   function setStatus(m,cls){var s=$('#loStatus');if(s){s.className='status '+(cls||'');s.textContent=m;}}
 
@@ -326,7 +338,8 @@
 
   /* ---- acesso a dados (VIA + seeds do HUB) ---- */
   function dRoteiro(){var r=VIA.get('roteiro',null);return (Array.isArray(r)&&r.length)?r:ROTEIRO_SEED;}
-  function dCheck(){var c=VIA.get('checklist',null);return (c&&typeof c==='object'&&c.levar)?c:CL_SEED;}
+  function clKey(){return 'checklist:'+(user&&user.id?user.id:'anon');}
+  function dCheck(){var c=VIA.get(clKey(),null);if(c&&typeof c==='object'&&c.levar)return c;return JSON.parse(JSON.stringify(CL_SEED));}
   function dGastos(){var g=VIA.get('gastos',null);return Array.isArray(g)?g:[];}
   function dDocs(){var d=VIA.get('documentos',null);return Array.isArray(d)?d:DOCS_SEED;}
   function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5};return{total:80000,cambio:5};}
@@ -517,11 +530,13 @@
     if(back)back.style.display='none';if(fab)fab.style.display='none';if(hdr)hdr.classList.remove('withback');
     if(!user){
       $('#hsub').textContent='Entre na sua conta';
-      app.innerHTML='<div class="card"><h2>🔐 Entrar na sua conta</h2><div class="sub" style="margin-bottom:12px">E-mail e senha. A mesma conta da suíte.</div>'+
+      app.innerHTML='<div class="card"><h2>🔐 Sua conta</h2><div class="sub" style="margin-bottom:12px">Entre com e-mail e senha. Cada um tem a sua conta — se ainda não tem, toque em <b>Criar conta</b>.</div>'+
         '<input class="f" id="loEmail" type="email" autocapitalize="off" autocorrect="off" placeholder="seu e-mail">'+
-        '<input class="f" id="loPass" type="password" autocomplete="current-password" placeholder="senha">'+
-        '<button class="btn" id="loBtn">Entrar</button><div class="status" id="loStatus"></div></div>';
-      $('#loBtn').addEventListener('click',sbLogin);return;
+        '<input class="f" id="loPass" type="password" autocomplete="current-password" placeholder="senha (mín. 6 caracteres)">'+
+        '<button class="btn" id="loBtn">Entrar</button>'+
+        '<button class="btn soft" id="loSignup" style="margin-top:10px">Criar conta</button>'+
+        '<div class="status" id="loStatus"></div></div>';
+      $('#loBtn').addEventListener('click',sbLogin);$('#loSignup').addEventListener('click',sbSignup);return;
     }
     if(!espacoId){
       $('#hsub').textContent='Comece por aqui';
@@ -559,10 +574,10 @@
     focoAgora:function(){var idx=diaDeHoje();if(idx<0)idx=0;focoOpen(idx);},
     focoNav:focoNav,focoClose:focoClose,
     clTab:function(p){clPanel=p;render();},
-    clSec:function(p,sid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.open=!s.open;VIA.set('checklist',c);var el=$('#cls-'+sid);if(el)el.classList.toggle('open');}},
-    clToggle:function(p,sid,iid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];var it=s&&s.items.filter(function(x){return x.id===iid;})[0];if(it){it.done=!it.done;VIA.set('checklist',c);render();}},
-    clDel:function(p,sid,iid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items=s.items.filter(function(x){return x.id!==iid;});VIA.set('checklist',c);render();}},
-    clAdd:function(e,p,sid){if(e.key!=='Enter')return;var t=e.target.value.trim();if(!t)return;var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items.push({id:'u'+Date.now(),text:t,done:false});s.open=true;VIA.set('checklist',c);render();}},
+    clSec:function(p,sid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.open=!s.open;VIA.set(clKey(),c);var el=$('#cls-'+sid);if(el)el.classList.toggle('open');}},
+    clToggle:function(p,sid,iid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];var it=s&&s.items.filter(function(x){return x.id===iid;})[0];if(it){it.done=!it.done;VIA.set(clKey(),c);render();}},
+    clDel:function(p,sid,iid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items=s.items.filter(function(x){return x.id!==iid;});VIA.set(clKey(),c);render();}},
+    clAdd:function(e,p,sid){if(e.key!=='Enter')return;var t=e.target.value.trim();if(!t)return;var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items.push({id:'u'+Date.now(),text:t,done:false});s.open=true;VIA.set(clKey(),c);render();}},
     gastoForm:gastoForm,metaForm:metaForm,
     gastoSave:function(){var desc=$('#gDesc').value.trim(),cat=$('#gCat').value,val=parseFloat(($('#gVal').value||'').replace(',','.')),moeda=$('#gMoeda').value,data=$('#gData').value;if(!desc||!val){toast('Preencha descrição e valor.');return;}var gs=dGastos();gs.push({id:Date.now(),desc:desc,cat:cat,moeda:moeda,valor:val,data:data});VIA.set('gastos',gs);closeSheet();render();toast('Gasto lançado ✓');},
     gastoDel:function(id){var gs=dGastos().filter(function(g){return g.id!==id;});VIA.set('gastos',gs);render();},
