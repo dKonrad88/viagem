@@ -21,6 +21,7 @@
   body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
   .header{background:linear-gradient(135deg,#0d3d6b,#185FA5 55%,#1a7a8a);color:#fff;padding:calc(env(safe-area-inset-top) + 20px) 18px 22px;border-radius:0 0 24px 24px;position:relative}
   .header h1{font-size:1.35rem;font-weight:600;display:flex;align-items:center;gap:.5rem}
+  .header.withback h1,.header.withback p{padding-left:48px;transition:padding .15s}
   .header p{font-size:.82rem;opacity:.9;margin-top:2px}
   .cfg-btn{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:16px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);border:0;color:#fff;font-size:1.2rem;cursor:pointer}
   .wrap{max-width:560px;margin:0 auto;padding:16px 16px 90px}
@@ -512,8 +513,8 @@
   var SEC_FAB={gastos:gastoForm,documentos:docForm};
   function render(){
     var app=$('#app');
-    var back=$('#backBtn'), fab=$('#fab');
-    if(back)back.style.display='none';if(fab)fab.style.display='none';
+    var back=$('#backBtn'), fab=$('#fab'), hdr=$('.header');
+    if(back)back.style.display='none';if(fab)fab.style.display='none';if(hdr)hdr.classList.remove('withback');
     if(!user){
       $('#hsub').textContent='Entre na sua conta';
       app.innerHTML='<div class="card"><h2>🔐 Entrar na sua conta</h2><div class="sub" style="margin-bottom:12px">E-mail e senha. A mesma conta da suíte.</div>'+
@@ -537,7 +538,7 @@
       return;
     }
     // seção
-    if(back)back.style.display='flex';
+    if(back)back.style.display='flex';if(hdr)hdr.classList.add('withback');
     $('#hsub').textContent=(SEC_TITLES[view]||'').replace(/^\S+\s/,'');
     var html='';
     if(view==='inicio')html=renderInicio();
