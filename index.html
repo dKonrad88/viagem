@@ -66,6 +66,7 @@
   textarea.f{width:100%;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;outline:none;margin-bottom:10px;resize:vertical;min-height:64px}
   label.lbl{font-size:.78rem;color:var(--muted);display:block;margin:2px 2px 5px}
   .del-btn{background:none;border:0;color:var(--erro);font-size:1rem;cursor:pointer;padding:6px}
+  .mini{background:none;border:0;color:var(--muted);font-size:.82rem;cursor:pointer;padding:1px 4px;vertical-align:middle}
   /* ---------- início ---------- */
   .countdown{text-align:center;padding:18px}
   .countdown .big{font-size:3rem;font-weight:700;line-height:1;background:linear-gradient(135deg,#4aa3ff,#2fd0c6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -170,7 +171,7 @@
 <body>
   <div class="header">
     <button class="cfg-btn" id="cfgBtn" aria-label="Configurações">⚙️</button>
-    <button class="back-btn" id="backBtn" aria-label="Voltar" style="display:none" onclick="VUI.home()">‹</button>
+    <button class="back-btn" id="backBtn" aria-label="Voltar" style="display:none" onclick="VUI.back()">‹</button>
     <h1>🧳 Viagem</h1>
     <p id="hsub">Nosso planejamento</p>
   </div>
@@ -196,7 +197,7 @@
   "use strict";
   var SB_URL='https://jlouesrrmqeauzlgvrpw.supabase.co';
   var SB_KEY='sb_publishable_ulG1woVG1p1Seax63GGYPQ_PG6-8l-G';
-  var sb=null, user=null, espacoId=null, espacoNome='Viagem', dados={};
+  var sb=null, user=null, espacoId=null, espacoNome='Viagem', dados={}, espacos=[];
   var $=function(s){return document.querySelector(s);};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   var toastT=null;
@@ -252,17 +253,23 @@
     var r=await sb.from('listas').select('id,nome,tipo').eq('tipo','viagem').order('created_at');
     return r.error?[]:(r.data||[]);
   }
-  async function criarEspaco(){
-    var r=await sb.rpc('criar_lista',{p_nome:'Viagem',p_tipo:'viagem'});
+  async function criarEspaco(nome){
+    var r=await sb.rpc('criar_lista',{p_nome:(nome&&nome.trim())||'Nova viagem',p_tipo:'viagem'});
     if(r.error){toast('Falha: '+r.error.message);return;}
-    espacoId=r.data; await carregarDados(); render();
+    espacos=await carregarEspacos();
+    closeSheet(); await abrirViagem(r.data); toast('Viagem criada ✓');
   }
   async function entrarPorCodigo(){
     var code=($('#joinCode').value||'').trim().toUpperCase();
     if(code.length<4){setStatus('Digite o código.','err');return;}
     var r=await sb.rpc('entrar_por_codigo',{p_codigo:code});
     if(r.error){setStatus(/invalido/i.test(r.error.message)?'Código inválido.':(/expirado/i.test(r.error.message)?'Código expirado.':('Falha: '+r.error.message)),'err');return;}
-    espacoId=r.data; await carregarDados(); toast('Entrou na viagem ✓'); render();
+    espacos=await carregarEspacos(); await abrirViagem(r.data); toast('Entrou na viagem ✓');
+  }
+  async function abrirViagem(id){
+    espacoId=id; var e=espacos.filter(function(x){return x.id===id;})[0];
+    espacoNome=(e&&e.nome)||'Viagem'; view='home';
+    await carregarDados(); render(); window.scrollTo(0,0);
   }
   async function gerarConvite(){
     if(!espacoId)return;
@@ -288,9 +295,8 @@
   /* ---------- boot ---------- */
   async function boot(){
     if(!user){render();return;}
-    var esps=await carregarEspacos();
-    if(esps.length){espacoId=esps[0].id;espacoNome=esps[0].nome||'Viagem';await carregarDados();}
-    else{espacoId=null;}
+    espacos=await carregarEspacos();
+    espacoId=null; espacoNome=''; view='home';
     render();
   }
 
@@ -336,20 +342,35 @@
   var DOC_TIPOS=[['passport','🛂','Passaporte'],['ticket','✈️','Passagem'],['reservation','🏨','Reserva'],['voucher','🎟️','Voucher'],['card','💳','Cartão/Seguro'],['other','📄','Outro']];
   var clPanel='levar', gastosView='lanc';
   function dPessoas(){var p=VIA.get('pessoas',null);return (Array.isArray(p)&&p.length)?p:['Diego','Débora','Hélio','Quizela'];}
+  function gItens(arr){return arr.map(function(t,i){return {id:'g'+i+'_'+Math.floor(Math.random()*1e6),text:t,done:false};});}
+  var GENERIC_CL={
+    levar:{sections:[
+      {id:'gl1',name:'Documentos',open:false,items:gItens(['Passaporte / identidade','Cartões de crédito','Dinheiro / moeda local','Seguro viagem','Reservas impressas'])},
+      {id:'gl2',name:'Eletrônicos',open:false,items:gItens(['Celular','Carregador','Carregador portátil','Adaptador de tomada','Fone de ouvido'])},
+      {id:'gl3',name:'Roupas',open:false,items:gItens(['Roupas do dia a dia','Roupa íntima','Meias','Pijama','Casaco / jaqueta','Calçados confortáveis'])},
+      {id:'gl4',name:'Higiene & Saúde',open:false,items:gItens(['Escova e pasta de dente','Desodorante','Protetor solar','Remédios de uso contínuo','Kit primeiros socorros'])}
+    ]},
+    comprar:{sections:[{id:'gc1',name:'Compras',open:false,items:[]}]},
+    visitar:{sections:[{id:'gv1',name:'Lugares',open:false,items:[]}]},
+    previagem:{sections:[
+      {id:'gp1',name:'Antes de viajar',open:false,items:gItens(['Check-in do voo','Avisar o banco sobre a viagem','Baixar mapas offline','Chip / eSIM internacional','Fechar água/gás e janelas de casa'])}
+    ]}
+  };
 
   /* ---- acesso a dados (VIA + seeds do HUB) ---- */
-  function dRoteiro(){var r=VIA.get('roteiro',null);return (Array.isArray(r)&&r.length)?r:ROTEIRO_SEED;}
+  function dRoteiro(){var r=VIA.get('roteiro',null);return Array.isArray(r)?r:[];}
   function clKey(){return 'checklist:'+(user&&user.id?user.id:'anon');}
-  function dCheck(){var c=VIA.get(clKey(),null);if(c&&typeof c==='object'&&c.levar)return c;return JSON.parse(JSON.stringify(CL_SEED));}
+  function dCheck(){var c=VIA.get(clKey(),null);if(c&&typeof c==='object'&&c.levar)return c;return JSON.parse(JSON.stringify(GENERIC_CL));}
   function dGastos(){var g=VIA.get('gastos',null);return Array.isArray(g)?g:[];}
-  function dDocs(){var d=VIA.get('documentos',null);return Array.isArray(d)?d:DOCS_SEED;}
+  function dDocs(){var d=VIA.get('documentos',null);return Array.isArray(d)?d:[];}
   function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5};return{total:80000,cambio:5};}
   function tripStart(){return VIA.get('data',null)||'2026-09-30';}
 
   /* ---- helpers ---- */
   function money(v){return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
   function toReais(v,m){return m==='US$'?(v||0)*dMeta().cambio:(v||0);}
-  function diaMapsUrl(r){var pts=(r&&r.rota)||[];if(pts.length<2)return '';var e=encodeURIComponent;var o=e(pts[0]),d=e(pts[pts.length-1]),mid=pts.slice(1,-1).map(e).join('%7C');var u='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving';if(mid)u+='&waypoints='+mid;return u;}
+  function diaRota(r){var pts=(r&&r.rota&&r.rota.length>=2)?r.rota:((r&&r.stops)||[]).filter(function(s){return s.endereco;}).map(function(s){return s.endereco;});return pts;}
+  function diaMapsUrl(r){var pts=diaRota(r);if(pts.length<2)return '';var e=encodeURIComponent;var o=e(pts[0]),d=e(pts[pts.length-1]),mid=pts.slice(1,-1).map(e).join('%7C');var u='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving';if(mid)u+='&waypoints='+mid;return u;}
   function focoMapsUrl(end){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(String(end||'').split('(')[0].trim());}
   function daysBetween(a,b){return Math.floor((a-b)/86400000);}
   function hojeMeia(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
@@ -386,7 +407,8 @@
   }
 
   /* ================= ROTEIRO ================= */
-  function stopHtml(s){
+  function mini(icon,onclick){return '<button class="mini" onclick="event.stopPropagation();'+onclick+'">'+icon+'</button>';}
+  function stopHtml(s,i,si){
     var meta='';
     if(s.endereco)meta+='<div class="stop-m">📍 <span>'+esc(s.endereco)+'</span></div>';
     if(s.horarioFunc)meta+='<div class="stop-m">🕒 <span>'+esc(s.horarioFunc)+'</span></div>';
@@ -398,22 +420,28 @@
       det='<details class="stop-det"><summary>ver detalhes</summary>'+s.detalhes.map(function(sec){return '<div class="sec-t">'+esc(sec.titulo)+'</div><ul>'+(sec.itens||[]).map(function(it){return '<li>'+esc(it)+'</li>';}).join('')+'</ul>';}).join('')+'</details>';
     }
     var al=s.alerta?'<div class="stop-al">⚠ '+esc(s.alerta)+'</div>':'';
-    return '<div class="stop"><div class="stop-h">'+esc(s.hora||'')+'</div><div class="stop-ic">'+esc(s.icone||'📍')+'</div><div class="stop-c"><div class="stop-t">'+esc(s.titulo||'')+'</div>'+al+meta+det+'</div></div>';
+    var ed=mini('✎','VUI.stopForm('+i+','+si+')')+mini('🗑','VUI.stopDel('+i+','+si+')');
+    return '<div class="stop"><div class="stop-h">'+esc(s.hora||'')+'</div><div class="stop-ic">'+esc(s.icone||'📍')+'</div><div class="stop-c"><div class="stop-t">'+esc(s.titulo||'')+' '+ed+'</div>'+al+meta+det+'</div></div>';
   }
   function diaHtml(r,i){
-    var stops=(r.stops||[]).map(stopHtml).join('');
+    var stops=(r.stops||[]).map(function(s,si){return stopHtml(s,i,si);}).join('');
     var avisos=(r.avisos&&r.avisos.length)?r.avisos.map(function(a){return '<div class="aviso">⚠ <span>'+esc(a)+'</span></div>';}).join(''):'';
     var mapsU=diaMapsUrl(r);
     var acts='<div class="dia-acts">'+
-      '<button class="actbtn" onclick="VUI.foco('+i+')">▶ Modo Foco</button>'+
+      ((r.stops&&r.stops.length)?'<button class="actbtn" onclick="VUI.foco('+i+')">▶ Modo Foco</button>':'')+
       (mapsU?'<a class="actbtn map" href="'+mapsU+'" target="_blank" rel="noopener">🗺️ Rota do dia</a>':'')+'</div>';
+    var edic='<div class="dia-acts"><button class="actbtn" onclick="VUI.stopForm('+i+')">＋ Parada</button><button class="actbtn" onclick="VUI.diaForm('+i+')">✎ Editar dia</button><button class="actbtn" onclick="VUI.diaDel('+i+')">🗑 Excluir dia</button></div>';
     var semana=r.diaSemana?esc(r.diaSemana)+', ':'';
-    var dataL=r.dataLonga?esc(r.dataLonga):esc(r.data);
-    return '<div class="dia" id="dia-'+i+'"><div class="dia-head" onclick="VUI.toggleDia('+i+')"><div class="dia-n">'+esc(r.dia)+'</div><div class="dia-info"><div class="dia-d">'+semana+dataL+'</div><div class="dia-t">'+esc(r.titulo)+'</div></div><span class="dia-g">US$ '+esc(r.gasto)+'</span><span class="dia-chev">▾</span></div><div class="dia-body">'+acts+avisos+stops+'</div></div>';
+    var dataL=r.dataLonga?esc(r.dataLonga):esc(r.data||'');
+    var badge=r.gasto?'<span class="dia-g">US$ '+esc(r.gasto)+'</span>':'';
+    var vazio=(!r.stops||!r.stops.length)?'<div class="sub" style="padding:4px 0 8px">Sem paradas ainda. Toque em <b>＋ Parada</b>.</div>':'';
+    return '<div class="dia" id="dia-'+i+'"><div class="dia-head" onclick="VUI.toggleDia('+i+')"><div class="dia-n">'+esc(r.dia)+'</div><div class="dia-info"><div class="dia-d">'+semana+dataL+'</div><div class="dia-t">'+esc(r.titulo||'(sem título)')+'</div></div>'+badge+'<span class="dia-chev">▾</span></div><div class="dia-body">'+acts+avisos+vazio+stops+edic+'</div></div>';
   }
   function renderRoteiro(){
     var rt=dRoteiro(), idxHoje=diaDeHoje();
-    var top='<button class="btn" onclick="VUI.focoAgora()">▶ Modo Foco'+(idxHoje>=0?' — começar por hoje':'')+'</button>';
+    if(!rt.length)return '<div class="empty">Roteiro em branco.<br>Toque no <b>+</b> para adicionar o primeiro dia.</div>';
+    var temStops=rt.some(function(r){return r.stops&&r.stops.length;});
+    var top=temStops?'<button class="btn" onclick="VUI.focoAgora()">▶ Modo Foco'+(idxHoje>=0?' — começar por hoje':'')+'</button>':'';
     return top+rt.map(diaHtml).join('');
   }
 
@@ -450,6 +478,31 @@
   function focoOpen(diaIdx,stopIdx){focoState={diaIdx:diaIdx,stopIdx:(typeof stopIdx==='number'?stopIdx:stopAtual(diaIdx))};focoRender();$('#focoOv').classList.add('open');}
   function focoClose(){$('#focoOv').classList.remove('open');}
 
+  /* ---- edição de roteiro ---- */
+  function diaForm(i){
+    var rt=dRoteiro(), r=(typeof i==='number')?rt[i]:null;
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">'+(r?'✎ Editar dia':'＋ Novo dia')+'</h2>'+
+      '<label class="lbl">Título do dia</label><input class="f" id="dyTit" placeholder="ex.: Chegada e city tour" value="'+(r?esc(r.titulo||''):'')+'">'+
+      '<label class="lbl">Data (texto livre)</label><input class="f" id="dyData" placeholder="ex.: Seg 05/01" value="'+(r?esc(r.data||''):'')+'">'+
+      '<label class="lbl">Gasto estimado US$ (opcional)</label><input class="f" id="dyGasto" type="number" inputmode="decimal" value="'+(r&&r.gasto?esc(r.gasto):'')+'">'+
+      '<button class="btn" onclick="VUI.diaSave('+(typeof i==='number'?i:-1)+')">Salvar dia</button>');
+  }
+  function stopForm(i,si){
+    var rt=dRoteiro(), r=rt[i]; if(!r)return;
+    var s=(typeof si==='number')?(r.stops||[])[si]:null;
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">'+(s?'✎ Editar parada':'＋ Nova parada')+'</h2>'+
+      '<div class="row" style="gap:10px"><div style="width:84px"><label class="lbl">Hora</label><input class="f" id="stHora" placeholder="9h" value="'+(s?esc(s.hora||''):'')+'"></div><div style="width:76px"><label class="lbl">Ícone</label><input class="f" id="stIcone" placeholder="📍" value="'+(s?esc(s.icone||''):'')+'"></div><div style="flex:1"><label class="lbl">Título</label><input class="f" id="stTit" placeholder="ex.: Louvre" value="'+(s?esc(s.titulo||''):'')+'"></div></div>'+
+      '<label class="lbl">Endereço / local (usado na rota do Maps)</label><input class="f" id="stEnd" placeholder="endereço ou nome do lugar" value="'+(s?esc(s.endereco||''):'')+'">'+
+      '<label class="lbl">Nota (opcional)</label><input class="f" id="stNota" value="'+(s?esc(s.nota||''):'')+'">'+
+      '<label class="lbl">Alerta (opcional)</label><input class="f" id="stAlerta" placeholder="ex.: fecha às 18h" value="'+(s?esc(s.alerta||''):'')+'">'+
+      '<button class="btn" onclick="VUI.stopSave('+i+','+(typeof si==='number'?si:-1)+')">Salvar parada</button>');
+  }
+  function secForm(){
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">＋ Nova seção</h2>'+
+      '<label class="lbl">Nome da seção</label><input class="f" id="secNome" placeholder="ex.: Eletrônicos">'+
+      '<button class="btn" onclick="VUI.secSave()">Criar seção</button>');
+  }
+
   /* ================= CHECKLIST ================= */
   function renderChecklist(){
     var tabs='<div class="scroller">'+CL_PANELS.map(function(p){return '<button class="pill'+(p[0]===clPanel?' on':'')+'" onclick="VUI.clTab(\''+p[0]+'\')">'+p[1]+' '+p[2]+'</button>';}).join('')+'</div>';
@@ -459,10 +512,10 @@
       var items=(sec.items||[]).map(function(it){
         return '<div class="clitem'+(it.done?' done':'')+'"><div class="box" onclick="VUI.clToggle(\''+clPanel+'\',\''+sec.id+'\',\''+it.id+'\')">'+(it.done?'✓':'')+'</div><div class="tx">'+esc(it.text)+'</div><button class="del-btn" onclick="VUI.clDel(\''+clPanel+'\',\''+sec.id+'\',\''+it.id+'\')">✕</button></div>';
       }).join('');
-      return '<div class="clsec'+(sec.open?' open':'')+'" id="cls-'+sec.id+'"><div class="clsec-h" onclick="VUI.clSec(\''+clPanel+'\',\''+sec.id+'\')"><span class="nm">'+esc(sec.name)+'</span><span class="ct">'+done+'/'+tot+'</span><span class="dia-chev clsec-chev">▾</span></div><div class="clsec-body">'+items+
+      return '<div class="clsec'+(sec.open?' open':'')+'" id="cls-'+sec.id+'"><div class="clsec-h" onclick="VUI.clSec(\''+clPanel+'\',\''+sec.id+'\')"><span class="nm">'+esc(sec.name)+'</span><span class="ct">'+done+'/'+tot+'</span>'+mini('🗑','VUI.secDel(\''+clPanel+'\',\''+sec.id+'\')')+'<span class="dia-chev clsec-chev">▾</span></div><div class="clsec-body">'+items+
         '<div class="cladd"><input placeholder="+ adicionar item" onkeydown="VUI.clAdd(event,\''+clPanel+'\',\''+sec.id+'\')"></div></div></div>';
     }).join('');
-    return tabs+(secs.length?body:'<div class="empty">Sem seções nessa lista ainda.</div>');
+    return tabs+body+'<div class="card"><button class="btn soft" onclick="VUI.secForm()">＋ Nova seção</button></div>';
   }
 
   /* ================= GASTOS ================= */
@@ -568,8 +621,27 @@
   }
 
   /* ================= ROUTER ================= */
+  function renderTrips(){
+    var grid;
+    if(espacos.length){
+      grid='<div class="grid" style="grid-template-columns:1fr">'+espacos.map(function(e){
+        return '<div class="tile" onclick="VUI.abrir(\''+e.id+'\')"><div class="ic">🧳</div><div class="t">'+esc(e.nome||'Viagem')+'</div><div class="s">toque para abrir</div></div>';
+      }).join('')+'</div>';
+    } else grid='<div class="empty">Você ainda não tem viagens.<br>Crie a primeira ou entre com um código.</div>';
+    return grid+
+      '<div class="card"><button class="btn" onclick="VUI.novaViagem()">＋ Nova viagem</button></div>'+
+      '<div class="card"><h2>Entrar numa viagem</h2><div class="sub" style="margin:2px 0 10px">Alguém te passou um código de convite?</div>'+
+      '<input class="f" id="joinCode" autocapitalize="characters" placeholder="código (ex.: ABC123)">'+
+      '<button class="btn soft" onclick="VUI.join()">Entrar com código</button><div class="status" id="loStatus"></div></div>';
+  }
+  function novaViagemForm(){
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">🧳 Nova viagem</h2>'+
+      '<label class="lbl">Nome da viagem</label><input class="f" id="nvNome" placeholder="ex.: Paris 2027">'+
+      '<label class="lbl">Data de início (opcional)</label><input class="f" id="nvData" type="date">'+
+      '<button class="btn" onclick="VUI.novaViagemSave()">Criar viagem</button>');
+  }
   var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos'};
-  var SEC_FAB={gastos:gastoForm,documentos:docForm};
+  var SEC_FAB={gastos:gastoForm,documentos:docForm,roteiro:function(){diaForm();},checklist:function(){secForm();}};
   function render(){
     var app=$('#app');
     var back=$('#backBtn'), fab=$('#fab'), hdr=$('.header');
@@ -585,14 +657,12 @@
       $('#loBtn').addEventListener('click',sbLogin);$('#loSignup').addEventListener('click',sbSignup);return;
     }
     if(!espacoId){
-      $('#hsub').textContent='Comece por aqui';
-      app.innerHTML='<div class="card"><h2>🧳 Nossa viagem</h2><div class="sub">Crie o espaço da viagem (você vira o dono) ou entre com um código que te passaram.</div>'+
-        '<button class="btn" id="crBtn" style="margin-top:14px">Criar a viagem</button><div style="height:10px"></div>'+
-        '<input class="f" id="joinCode" autocapitalize="characters" placeholder="código de convite (ex.: ABC123)">'+
-        '<button class="btn soft" id="joBtn">Entrar com código</button><div class="status" id="loStatus"></div></div>';
-      $('#crBtn').addEventListener('click',criarEspaco);$('#joBtn').addEventListener('click',entrarPorCodigo);return;
+      $('#hsub').textContent='Suas viagens';
+      app.innerHTML=renderTrips();
+      return;
     }
     if(view==='home'){
+      if(back)back.style.display='flex';if(hdr)hdr.classList.add('withback');
       $('#hsub').textContent=espacoNome;
       var tiles=SECOES.map(function(s){return '<div class="tile" onclick="VUI.go(\''+s[3]+'\')"><div class="ic">'+s[0]+'</div><div class="t">'+esc(s[1])+'</div><div class="s">'+esc(s[2])+'</div></div>';}).join('');
       app.innerHTML='<div class="grid">'+tiles+'</div>';
@@ -615,6 +685,28 @@
   window.VUI={
     go:function(v){view=v;render();window.scrollTo(0,0);},
     home:function(){view='home';render();window.scrollTo(0,0);},
+    back:function(){if(view!=='home'){view='home';render();}else{espacoId=null;espacoNome='';dados={};view='home';render();}window.scrollTo(0,0);},
+    abrir:function(id){abrirViagem(id);},
+    novaViagem:novaViagemForm,
+    novaViagemSave:async function(){var nome=($('#nvNome').value||'').trim();var data=$('#nvData').value;if(!nome){toast('Dê um nome à viagem.');return;}await criarEspaco(nome);if(data)VIA.set('data',data);},
+    join:function(){entrarPorCodigo();},
+    diaForm:diaForm,
+    diaSave:function(i){var rt=dRoteiro().slice();var tit=($('#dyTit').value||'').trim();var data=($('#dyData').value||'').trim();var g=parseFloat(($('#dyGasto').value||'').replace(',','.'));if(!tit&&!data){toast('Preencha ao menos o título.');return;}
+      if(i>=0&&rt[i]){rt[i]=Object.assign({},rt[i],{titulo:tit,data:data,gasto:isNaN(g)?rt[i].gasto:g});}
+      else{rt.push({dia:rt.length+1,titulo:tit,data:data,gasto:isNaN(g)?0:g,stops:[]});}
+      VIA.set('roteiro',rt);closeSheet();render();toast('Dia salvo ✓');},
+    diaDel:function(i){if(!window.confirm('Excluir este dia inteiro?'))return;var rt=dRoteiro().slice();rt.splice(i,1);rt.forEach(function(r,k){r.dia=k+1;});VIA.set('roteiro',rt);render();},
+    stopForm:stopForm,
+    stopSave:function(i,si){var rt=dRoteiro().slice();var r=rt[i];if(!r)return;r.stops=r.stops||[];
+      var s={hora:($('#stHora').value||'').trim(),icone:($('#stIcone').value||'').trim(),titulo:($('#stTit').value||'').trim(),endereco:($('#stEnd').value||'').trim(),nota:($('#stNota').value||'').trim(),alerta:($('#stAlerta').value||'').trim()};
+      if(!s.titulo){toast('Dê um título à parada.');return;}
+      if(si>=0&&r.stops[si]){r.stops[si]=Object.assign({},r.stops[si],s);}
+      else{s.id='st'+Date.now();r.stops.push(s);}
+      VIA.set('roteiro',rt);closeSheet();render();toast('Parada salva ✓');},
+    stopDel:function(i,si){var rt=dRoteiro().slice();var r=rt[i];if(r&&r.stops){r.stops.splice(si,1);VIA.set('roteiro',rt);render();}},
+    secForm:secForm,
+    secSave:function(){var nome=($('#secNome').value||'').trim();if(!nome){toast('Dê um nome à seção.');return;}var c=dCheck();c[clPanel].sections.push({id:'sec'+Date.now(),name:nome,open:true,items:[]});VIA.set(clKey(),c);closeSheet();render();toast('Seção criada ✓');},
+    secDel:function(p,sid){if(!window.confirm('Excluir esta seção e seus itens?'))return;var c=dCheck();c[p].sections=c[p].sections.filter(function(x){return x.id!==sid;});VIA.set(clKey(),c);render();},
     toggleDia:function(i){var el=$('#dia-'+i);if(el)el.classList.toggle('open');},
     foco:focoOpen,
     focoAgora:function(){var idx=diaDeHoje();if(idx<0)idx=0;focoOpen(idx);},
