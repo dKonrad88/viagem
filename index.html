@@ -234,6 +234,7 @@
     user=r.data.user; boot();
   }
   async function sbSignup(){
+    setStatus('🔒 Cadastro fechado — este app é privado. Use "Entrar" com a sua conta.','err');return;
     sbInit();if(!sb){toast('Sem conexão.');return;}
     var email=($('#loEmail').value||'').trim().toLowerCase(), pass=($('#loPass').value||'');
     if(!email||email.indexOf('@')<1){setStatus('Digite um e-mail válido.','err');return;}
@@ -648,13 +649,12 @@
     if(back)back.style.display='none';if(fab)fab.style.display='none';if(hdr)hdr.classList.remove('withback');
     if(!user){
       $('#hsub').textContent='Entre na sua conta';
-      app.innerHTML='<div class="card"><h2>🔐 Sua conta</h2><div class="sub" style="margin-bottom:12px">Entre com e-mail e senha. Cada um tem a sua conta — se ainda não tem, toque em <b>Criar conta</b>.</div>'+
+      app.innerHTML='<div class="card"><h2>🔐 Entrar na sua conta</h2><div class="sub" style="margin-bottom:12px">E-mail e senha. A mesma conta da suíte.</div>'+
         '<input class="f" id="loEmail" type="email" autocapitalize="off" autocorrect="off" placeholder="seu e-mail">'+
-        '<input class="f" id="loPass" type="password" autocomplete="current-password" placeholder="senha (mín. 6 caracteres)">'+
+        '<input class="f" id="loPass" type="password" autocomplete="current-password" placeholder="senha">'+
         '<button class="btn" id="loBtn">Entrar</button>'+
-        '<button class="btn soft" id="loSignup" style="margin-top:10px">Criar conta</button>'+
         '<div class="status" id="loStatus"></div></div>';
-      $('#loBtn').addEventListener('click',sbLogin);$('#loSignup').addEventListener('click',sbSignup);return;
+      $('#loBtn').addEventListener('click',sbLogin);return;
     }
     if(!espacoId){
       $('#hsub').textContent='Suas viagens';
