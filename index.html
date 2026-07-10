@@ -649,6 +649,19 @@
   }
 
   /* ================= DOCUMENTOS ================= */
+  var DOC_BUCKET='viagem-docs', DOC_MAX=20971520;
+  async function docUpload(file){
+    if(!sb||!espacoId){toast('Sem conexão.');return null;}
+    var ext=((file.name||'').split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'')||'bin';
+    var path=espacoId+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,7)+'.'+ext;
+    var r=await sb.storage.from(DOC_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});
+    if(r.error){toast('Falha no upload: '+r.error.message);return null;}
+    return {path:path,nome:file.name||'arquivo',tipo:file.type||'',size:file.size||0};
+  }
+  async function docSignedUrl(path){
+    if(!sb)return null;var r=await sb.storage.from(DOC_BUCKET).createSignedUrl(path,3600);
+    return (r&&r.data&&r.data.signedUrl)?r.data.signedUrl:null;
+  }
   function docIcon(t){var f=DOC_TIPOS.filter(function(x){return x[0]===t;})[0];return f?f[1]:'📄';}
   function docLabel(t){var f=DOC_TIPOS.filter(function(x){return x[0]===t;})[0];return f?f[2]:'Outro';}
   function renderDocumentos(){
@@ -656,9 +669,10 @@
     if(!ds.length)return '<div class="empty">Nenhum documento.<br>Toque no + para adicionar passagens, reservas e vouchers.</div>';
     return ds.map(function(d){
       var sub=[docLabel(d.tipo),d.pessoa,d.validade?('val. '+d.validade.split('-').reverse().join('/')):''].filter(Boolean).join(' · ');
-      var link=d.link?'<a class="dl" href="'+esc(d.link)+'" target="_blank" rel="noopener">🔗 abrir</a>':'';
+      var link=d.link?'<a class="dl" href="'+esc(d.link)+'" target="_blank" rel="noopener">🔗 abrir link</a>':'';
+      var anexo=d.arquivo&&d.arquivo.path?'<a class="dl" style="cursor:pointer" onclick="VUI.docOpen('+d.id+')">📎 '+esc(d.arquivo.nome||'ver anexo')+'</a>':'';
       var obs=d.obs?'<div class="ds">'+esc(d.obs)+'</div>':'';
-      return '<div class="doc"><div class="di">'+docIcon(d.tipo)+'</div><div class="dd"><div class="dn">'+esc(d.nome||'—')+'</div><div class="ds">'+esc(sub)+'</div>'+(d.numero?'<div class="ds">nº '+esc(d.numero)+'</div>':'')+link+obs+'</div><button class="del-btn" onclick="VUI.docDel('+d.id+')">✕</button></div>';
+      return '<div class="doc"><div class="di">'+docIcon(d.tipo)+'</div><div class="dd"><div class="dn">'+esc(d.nome||'—')+'</div><div class="ds">'+esc(sub)+'</div>'+(d.numero?'<div class="ds">nº '+esc(d.numero)+'</div>':'')+anexo+link+obs+'</div><button class="del-btn" onclick="VUI.docDel('+d.id+')">✕</button></div>';
     }).join('');
   }
   function docForm(){
@@ -668,9 +682,10 @@
       '<label class="lbl">Pessoa</label><input class="f" id="dPessoa" placeholder="Diego, Débora, Todos…">'+
       '<label class="lbl">Nº / código (opcional)</label><input class="f" id="dNumero" placeholder="localizador, nº do doc…">'+
       '<label class="lbl">Validade / data (opcional)</label><input class="f" id="dVal" type="date">'+
+      '<label class="lbl">📎 Anexar arquivo (foto ou PDF, até 20MB)</label><input class="f" id="dFile" type="file" accept="image/*,application/pdf" style="padding:9px">'+
       '<label class="lbl">Link (opcional)</label><input class="f" id="dLink" placeholder="https://…">'+
       '<label class="lbl">Observações</label><textarea class="f" id="dObs" placeholder="detalhes, endereço, horário…"></textarea>'+
-      '<button class="btn" onclick="VUI.docSave()">Salvar documento</button>');
+      '<button class="btn" id="dSaveBtn" onclick="VUI.docSave()">Salvar documento</button>');
   }
 
   /* ================= ROUTER ================= */
@@ -782,8 +797,17 @@
     gastoDel:function(id){var gs=dGastos().filter(function(g){return g.id!==id;});VIA.set('gastos',gs);render();},
     metaSave:function(){var t=parseFloat(($('#mTotal').value||'').replace(',','.'))||80000,c=parseFloat(($('#mCambio').value||'').replace(',','.'))||5;VIA.set('meta',{total:t,cambio:c});closeSheet();render();toast('Meta atualizada ✓');},
     docForm:docForm,
-    docSave:function(){var nome=$('#dNome').value.trim();if(!nome){toast('Dê um nome ao documento.');return;}var ds=dDocs();ds.push({id:Date.now(),nome:nome,tipo:$('#dTipo').value,pessoa:$('#dPessoa').value.trim(),numero:$('#dNumero').value.trim(),validade:$('#dVal').value,link:$('#dLink').value.trim(),obs:$('#dObs').value.trim()});VIA.set('documentos',ds);closeSheet();render();toast('Documento salvo ✓');},
-    docDel:function(id){var ds=dDocs().filter(function(d){return d.id!==id;});VIA.set('documentos',ds);render();},
+    docSave:async function(){var nome=$('#dNome').value.trim();if(!nome){toast('Dê um nome ao documento.');return;}
+      var fi=$('#dFile'), file=fi&&fi.files&&fi.files[0], arquivo=null;
+      if(file){if(file.size>DOC_MAX){toast('Arquivo grande demais (máx 20MB).');return;}
+        var b=$('#dSaveBtn');if(b){b.disabled=true;b.textContent='enviando arquivo…';}
+        arquivo=await docUpload(file);
+        if(b){b.disabled=false;b.textContent='Salvar documento';}
+        if(!arquivo)return;}
+      var ds=dDocs();ds.push({id:Date.now(),nome:nome,tipo:$('#dTipo').value,pessoa:$('#dPessoa').value.trim(),numero:$('#dNumero').value.trim(),validade:$('#dVal').value,link:$('#dLink').value.trim(),obs:$('#dObs').value.trim(),arquivo:arquivo});
+      VIA.set('documentos',ds);closeSheet();render();toast('Documento salvo ✓');},
+    docOpen:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];if(!d||!d.arquivo||!d.arquivo.path)return;toast('Abrindo anexo…');var u=await docSignedUrl(d.arquivo.path);if(u)window.open(u,'_blank','noopener');else toast('Não consegui abrir o anexo.');},
+    docDel:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];var ds=dDocs().filter(function(x){return x.id!==id;});VIA.set('documentos',ds);render();if(d&&d.arquivo&&d.arquivo.path&&sb){try{await sb.storage.from(DOC_BUCKET).remove([d.arquivo.path]);}catch(e){}}},
     fab:function(){var f=SEC_FAB[view];if(f)f();}
   };
 
