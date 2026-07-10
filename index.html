@@ -138,6 +138,9 @@
   .foco-end,.foco-meta{font-size:.82rem;color:var(--muted);margin-top:8px;display:flex;gap:6px;align-items:center;justify-content:center;text-align:left}
   .foco-alerta{font-size:.82rem;color:#e8846f;margin-top:10px;background:rgba(210,83,63,.1);border-radius:10px;padding:8px}
   .foco-nota{font-size:.85rem;margin-top:10px;color:var(--ink)}
+  .foco-avisos{text-align:left;margin-top:12px;background:rgba(24,95,165,.1);border:1px solid rgba(26,122,138,.3);border-radius:12px;padding:8px 12px}
+  .foco-avisos summary{font-size:.82rem;font-weight:600;color:var(--primary2);cursor:pointer}
+  .foco-aviso{font-size:.82rem;color:var(--ink);margin-top:8px;line-height:1.45}
   .foco-sec{text-align:left;background:var(--card2);border-radius:12px;padding:11px 13px;margin-top:10px}
   .foco-sec-t{font-size:.82rem;font-weight:600}
   .foco-sec ul{margin:5px 0 0 16px;font-size:.8rem;color:var(--muted);line-height:1.55}
@@ -504,6 +507,7 @@
     var atual=diaDeHoje()===focoState.diaIdx&&i===stopAtual(focoState.diaIdx);
     var dots=stops.map(function(_,k){return '<span class="foco-dot'+(k===i?' on':(k<i?' done':''))+'"></span>';}).join('');
     var det=(s.detalhes||[]).map(function(sec){return '<div class="foco-sec"><div class="foco-sec-t">'+esc(sec.titulo)+'</div><ul>'+(sec.itens||[]).map(function(it){return '<li>'+esc(it)+'</li>';}).join('')+'</ul></div>';}).join('');
+    var avisosF=(d.avisos&&d.avisos.length)?'<details class="foco-avisos"'+(i===0?' open':'')+'><summary>📝 Lembretes do dia ('+d.avisos.length+')</summary>'+d.avisos.map(function(a){return '<div class="foco-aviso">'+esc(a)+'</div>';}).join('')+'</details>':'';
     var maps=s.endereco?'<a class="foco-maps" href="'+focoMapsUrl(s.endereco)+'" target="_blank" rel="noopener">📍 Abrir no Google Maps</a>':'';
     var prox=stops[i+1];
     var proxH=prox?'<div class="foco-next"><span class="foco-next-l">Depois</span>'+esc(prox.icone||'')+' '+esc(prox.titulo)+(s.desloc?'<div style="margin-top:4px">🚗 '+esc(s.desloc)+'</div>':'')+'</div>':'<div class="foco-next"><span class="foco-next-l">Fim do dia</span>🏁</div>';
@@ -516,7 +520,7 @@
       (s.fone?'<div class="foco-meta">📞 '+esc(s.fone)+'</div>':'')+
       (s.alerta?'<div class="foco-alerta">⚠ '+esc(s.alerta)+'</div>':'')+
       (s.nota?'<div class="foco-nota">'+esc(s.nota)+'</div>':'')+
-      det+maps+proxH+'</div>';
+      avisosF+det+maps+proxH+'</div>';
     $('#focoPrev').disabled=first;$('#focoNext').disabled=last;
   }
   function focoNav(delta){
