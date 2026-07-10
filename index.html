@@ -74,6 +74,19 @@
   .countdown{text-align:center;padding:18px}
   .countdown .big{font-size:3rem;font-weight:700;line-height:1;background:linear-gradient(135deg,#4aa3ff,#2fd0c6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .countdown .lbl{font-size:.85rem;color:var(--muted);margin-top:4px}
+  .cd-cap{text-align:center;font-size:.82rem;color:var(--muted);margin-bottom:8px}
+  .cd-wrap{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .cd-block{text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:58px}
+  .cd-num{font-size:1.7rem;font-weight:700;color:#60a5fa;line-height:1}
+  .cd-label{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem}
+  .cd-live{text-align:center;color:#34d399;font-weight:600;padding:8px}
+  .voo-grp{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--primary2);font-weight:600;margin:12px 0 2px}
+  .voo{border-top:1px solid var(--line);padding:9px 0}
+  .voo-rota{font-weight:600;font-size:.9rem}
+  .voo-times{font-size:.95rem;margin-top:2px;font-weight:500}
+  .voo-times span{color:var(--muted);margin:0 5px;font-weight:400}
+  .voo-times small{color:var(--muted);font-size:.7rem}
+  .voo-meta{font-size:.74rem;color:var(--muted);margin-top:2px}
   .bar{height:9px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:8px}
   .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#185FA5,#1a7a8a)}
   .kpi{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -372,6 +385,25 @@
   function dDocs(){var d=VIA.get('documentos',null);return Array.isArray(d)?d:[];}
   function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5};return{total:80000,cambio:5};}
   function tripStart(){var d=VIA.get('data',null);return (typeof d==='string'&&d)?d:null;}
+  function dVoos(){var v=VIA.get('voos',null);return (v&&typeof v==='object'&&(v.ida||v.volta))?v:null;}
+  function cdTarget(){var v=dVoos();if(v&&v.partida){var t=new Date(v.partida);if(!isNaN(t))return t;}var ts=tripStart();if(ts){var d=new Date(ts+'T00:00:00');if(!isNaN(d))return d;}return null;}
+  function countdownHTML(){var tgt=cdTarget();if(!tgt)return '';var diff=tgt-new Date();if(diff<=0)return '<div class="cd-live">Viagem em andamento! 🎉</div>';
+    var d=Math.floor(diff/864e5),h=Math.floor(diff%864e5/36e5),m=Math.floor(diff%36e5/6e4),s=Math.floor(diff%6e4/1e3);
+    function b(n,l){return '<div class="cd-block"><div class="cd-num">'+n+'</div><div class="cd-label">'+l+'</div></div>';}
+    return b(d,'Dias')+b(h,'Horas')+b(m,'Min')+b(s,'Seg');}
+  function vooLeg(f){
+    var rota=esc(f.de||'')+(f.dep?' ('+esc(f.dep)+')':'')+' → '+esc(f.para||'')+(f.arr?' ('+esc(f.arr)+')':'')+(f.data?' · '+esc(f.data):'');
+    var meta=[f.voo,f.aviao].filter(Boolean).map(esc).join(' · ');
+    return '<div class="voo"><div class="voo-rota">'+rota+'</div>'+
+      '<div class="voo-times">'+esc(f.saida||'')+' <span>→</span> '+esc(f.chegada||'')+(f.dur?' <small>('+esc(f.dur)+')</small>':'')+'</div>'+
+      (meta?'<div class="voo-meta">'+meta+'</div>':'')+'</div>';}
+  function voosCard(){
+    var v=dVoos();if(!v)return '';
+    var ida=(v.ida||[]).map(vooLeg).join(''), volta=(v.volta||[]).map(vooLeg).join('');
+    if(!ida&&!volta)return '';
+    return '<div class="card"><h2>✈️ Voos</h2>'+
+      (ida?'<div class="voo-grp">Ida</div>'+ida:'')+
+      (volta?'<div class="voo-grp">Volta</div>'+volta:'')+'</div>';}
 
   /* ---- helpers ---- */
   function money(v){return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
@@ -402,16 +434,17 @@
     if(ts){var ini=new Date(ts+'T00:00:00');if(!isNaN(ini)){var d0=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate());dias=daysBetween(d0,hojeMeia());}}
     var totalG=dGastos().reduce(function(a,g){return a+toReais(g.valor,g.moeda);},0);
     var meta=dMeta().total, pct=meta?Math.min(100,Math.round(totalG/meta*100)):0;
-    var cd;
+    var cd, tgt=cdTarget(), tdiff=tgt?(tgt-new Date()):null;
     if(idxHoje>=0)cd='<div class="card"><div class="countdown"><div class="big">'+(idxHoje+1)+'</div><div class="lbl">de '+rt.length+' — você está na viagem! 🎉</div></div></div>';
-    else if(dias!==null&&dias>0)cd='<div class="card"><div class="countdown"><div class="big">'+dias+'</div><div class="lbl">'+(dias===1?'dia':'dias')+' para embarcar ✈️</div></div></div>';
-    else if(dias!==null&&dias<=0)cd='<div class="card"><div class="countdown"><div class="big">✓</div><div class="lbl">viagem concluída</div></div></div>';
-    else cd='<div class="card"><div class="countdown"><div class="big">🗓️</div><div class="lbl">sem data de início definida</div></div><button class="btn soft" style="margin-top:6px" onclick="VUI.dataForm()">Definir data de início</button></div>';
+    else if(!tgt)cd='<div class="card"><div class="countdown"><div class="big">🗓️</div><div class="lbl">sem data de início definida</div></div><button class="btn soft" style="margin-top:6px" onclick="VUI.dataForm()">Definir data de início</button></div>';
+    else if(tdiff>0)cd='<div class="card"><div class="cd-cap">✈️ Faltam para embarcar</div><div class="cd-wrap" id="cdTick">'+countdownHTML()+'</div></div>';
+    else if(dias!==null&&rt.length&&dias>=rt.length)cd='<div class="card"><div class="countdown"><div class="big">✓</div><div class="lbl">viagem concluída</div></div></div>';
+    else cd='<div class="card"><div class="cd-live">Viagem em andamento! 🎉</div></div>';
     var prox='';
     if(idxHoje>=0){var dh=rt[idxHoje],si=stopAtual(idxHoje),st=dh.stops&&dh.stops[si];prox='<div class="card"><div class="row between"><h2>Agora no roteiro</h2><span class="chip">Dia '+esc(dh.dia)+'</span></div>'+(st?'<div class="sub" style="margin-top:6px">'+esc(st.icone||'📍')+' <b>'+esc(st.titulo)+'</b>'+(st.hora?' · '+esc(st.hora):'')+'</div>':'')+'<button class="btn" style="margin-top:12px" onclick="VUI.focoAgora()">▶ Abrir Modo Foco</button></div>';}
     else if(rt.length&&rt[0]){var pd=rt[0];prox='<div class="card"><div class="row between"><h2>Primeiro dia</h2><span class="chip">Dia '+esc(pd.dia)+'</span></div><div class="sub" style="margin-top:4px">'+(pd.data?esc(pd.data)+' — ':'')+esc(pd.titulo||'')+'</div><button class="btn soft" style="margin-top:12px" onclick="VUI.go(\'roteiro\')">Ver roteiro completo</button></div>';}
     var rotSub=rt.length?'Seu dia a dia da viagem.':'Ainda sem roteiro — toque para montar o seu.';
-    return cd+
+    return cd+voosCard()+
       prox+
       '<div class="card"><div class="row between" style="margin-bottom:8px"><h2>💸 Gastos</h2><span class="sub">'+pct+'% da meta</span></div>'+
         '<div class="kpi"><div class="k"><div class="l">Gasto até agora</div><div class="v">'+money(totalG)+'</div></div><div class="k"><div class="l">Meta</div><div class="v">'+money(meta)+'</div></div></div>'+
@@ -783,6 +816,8 @@
   $('#shBg').addEventListener('click',closeSheet);
   sbInit();
   if(sb){sb.auth.getSession().then(function(s){user=(s&&s.data&&s.data.session)?s.data.session.user:null;boot();});}else{render();}
+
+  setInterval(function(){var el=document.getElementById('cdTick');if(el)el.innerHTML=countdownHTML();},1000);
 
   if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
 })();
