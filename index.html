@@ -344,8 +344,8 @@
   var CAT_DOTS={'Alimentação':'#fb923c','Transporte':'#60a5fa','Hospedagem':'#a78bfa','Parques':'#34d399','Compras':'#fbbf24','Farmácia':'#f87171','Outros':'#9ca3af'};
   var CL_PANELS=[['levar','🧳','Levar'],['comprar','🛍️','Comprar'],['visitar','📍','Visitar'],['previagem','✅','Pré-viagem']];
   var DOC_TIPOS=[['passport','🛂','Passaporte'],['ticket','✈️','Passagem'],['reservation','🏨','Reserva'],['voucher','🎟️','Voucher'],['card','💳','Cartão/Seguro'],['other','📄','Outro']];
-  var clPanel='levar', gastosView='lanc', clPessoa='Diego';
-  function dPessoas(){var p=VIA.get('pessoas',null);return (Array.isArray(p)&&p.length)?p:['Diego','Débora','Hélio','Quizela'];}
+  var clPanel='levar', gastosView='lanc';
+  function dPessoas(){var p=VIA.get('pessoas',null);return (Array.isArray(p)&&p.length)?p:['Diego','Débora'];}
   function gItens(arr){return arr.map(function(t,i){return {id:'g'+i+'_'+Math.floor(Math.random()*1e6),text:t,done:false};});}
   var GENERIC_CL={
     levar:{sections:[
@@ -363,9 +363,11 @@
 
   /* ---- acesso a dados (VIA + seeds do HUB) ---- */
   function dRoteiro(){var r=VIA.get('roteiro',null);return Array.isArray(r)?r:[];}
-  function dCheckAll(){var c=VIA.get('checklists',null);return (c&&typeof c==='object')?c:{};}
-  function dCheckP(p){var c=dCheckAll()[p];return (c&&typeof c==='object'&&c.levar)?c:JSON.parse(JSON.stringify(GENERIC_CL));}
-  function saveCheckP(p,data){var all=dCheckAll();all[p]=data;VIA.set('checklists',all);}
+  function clKey(){return 'checklist:'+(user&&user.id?user.id:'anon');}
+  function dCheck(){var c=VIA.get(clKey(),null);if(c&&typeof c==='object'&&c.levar)return c;
+    var base=VIA.get('checklist_base',null);if(base&&typeof base==='object'&&base.levar)return JSON.parse(JSON.stringify(base));
+    return JSON.parse(JSON.stringify(GENERIC_CL));}
+  function saveCheck(data){VIA.set(clKey(),data);}
   function dGastos(){var g=VIA.get('gastos',null);return Array.isArray(g)?g:[];}
   function dDocs(){var d=VIA.get('documentos',null);return Array.isArray(d)?d:[];}
   function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5};return{total:80000,cambio:5};}
@@ -522,13 +524,9 @@
 
   /* ================= CHECKLIST ================= */
   function renderChecklist(){
-    var pessoas=dPessoas();
-    if(pessoas.indexOf(clPessoa)<0)clPessoa=pessoas[0]||'Diego';
-    var who='<div class="scroller" style="margin-bottom:8px">'+pessoas.map(function(p,i){
-      return '<button class="pill'+(p===clPessoa?' on':'')+'" onclick="VUI.clPessoaSel('+i+')">👤 '+esc(p)+'</button>';
-    }).join('')+'</div>';
     var tabs='<div class="scroller">'+CL_PANELS.map(function(p){return '<button class="pill'+(p[0]===clPanel?' on':'')+'" onclick="VUI.clTab(\''+p[0]+'\')">'+p[1]+' '+p[2]+'</button>';}).join('')+'</div>';
-    var data=dCheckP(clPessoa)[clPanel];var secs=(data&&data.sections)||[];
+    var mine=(user&&user.email)?('<div class="sub" style="margin:2px 0 6px">👤 Sua lista ('+esc(user.email)+') — só você edita a sua.</div>'):'';
+    var data=dCheck()[clPanel];var secs=(data&&data.sections)||[];
     var body=secs.map(function(sec){
       var done=(sec.items||[]).filter(function(x){return x.done;}).length, tot=(sec.items||[]).length;
       var items=(sec.items||[]).map(function(it){
@@ -537,8 +535,7 @@
       return '<div class="clsec'+(sec.open?' open':'')+'" id="cls-'+sec.id+'"><div class="clsec-h" onclick="VUI.clSec(\''+clPanel+'\',\''+sec.id+'\')"><span class="nm">'+esc(sec.name)+'</span><span class="ct">'+done+'/'+tot+'</span>'+mini('🗑','VUI.secDel(\''+clPanel+'\',\''+sec.id+'\')')+'<span class="dia-chev clsec-chev">▾</span></div><div class="clsec-body">'+items+
         '<div class="cladd"><input placeholder="+ adicionar item" onkeydown="VUI.clAdd(event,\''+clPanel+'\',\''+sec.id+'\')"></div></div></div>';
     }).join('');
-    var replicate='<div class="card"><button class="btn soft" onclick="VUI.clReplicate()">📋 Copiar a lista de '+esc(clPessoa)+' para todos</button><div class="sub" style="margin-top:6px;text-align:center">Todos ficam iguais; depois cada um tira o que não usa.</div></div>';
-    return who+tabs+body+'<div class="card"><button class="btn soft" onclick="VUI.secForm()">＋ Nova seção</button></div>'+replicate;
+    return mine+tabs+body+'<div class="card"><button class="btn soft" onclick="VUI.secForm()">＋ Nova seção</button></div>';
   }
 
   /* ================= GASTOS ================= */
@@ -729,19 +726,17 @@
       VIA.set('roteiro',rt);closeSheet();render();toast('Parada salva ✓');},
     stopDel:function(i,si){var rt=dRoteiro().slice();var r=rt[i];if(r&&r.stops){r.stops.splice(si,1);VIA.set('roteiro',rt);render();}},
     secForm:secForm,
-    secSave:function(){var nome=($('#secNome').value||'').trim();if(!nome){toast('Dê um nome à seção.');return;}var c=dCheckP(clPessoa);c[clPanel].sections.push({id:'sec'+Date.now(),name:nome,open:true,items:[]});saveCheckP(clPessoa,c);closeSheet();render();toast('Seção criada ✓');},
-    secDel:function(p,sid){if(!window.confirm('Excluir esta seção e seus itens?'))return;var c=dCheckP(clPessoa);c[p].sections=c[p].sections.filter(function(x){return x.id!==sid;});saveCheckP(clPessoa,c);render();},
+    secSave:function(){var nome=($('#secNome').value||'').trim();if(!nome){toast('Dê um nome à seção.');return;}var c=dCheck();c[clPanel].sections.push({id:'sec'+Date.now(),name:nome,open:true,items:[]});saveCheck(c);closeSheet();render();toast('Seção criada ✓');},
+    secDel:function(p,sid){if(!window.confirm('Excluir esta seção e seus itens?'))return;var c=dCheck();c[p].sections=c[p].sections.filter(function(x){return x.id!==sid;});saveCheck(c);render();},
     toggleDia:function(i){var el=$('#dia-'+i);if(el)el.classList.toggle('open');},
     foco:focoOpen,
     focoAgora:function(){var idx=diaDeHoje();if(idx<0)idx=0;focoOpen(idx);},
     focoNav:focoNav,focoClose:focoClose,
     clTab:function(p){clPanel=p;render();},
-    clPessoaSel:function(i){var ps=dPessoas();if(ps[i]){clPessoa=ps[i];render();window.scrollTo(0,0);}},
-    clReplicate:function(){if(!window.confirm('Copiar a lista de '+clPessoa+' para TODAS as pessoas? Substitui as listas atuais dos outros.'))return;var base=JSON.parse(JSON.stringify(dCheckP(clPessoa)));var all=dCheckAll();dPessoas().forEach(function(p){all[p]=JSON.parse(JSON.stringify(base));});VIA.set('checklists',all);render();toast('Lista copiada para todos ✓');},
-    clSec:function(p,sid){var c=dCheckP(clPessoa);var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.open=!s.open;saveCheckP(clPessoa,c);var el=$('#cls-'+sid);if(el)el.classList.toggle('open');}},
-    clToggle:function(p,sid,iid){var c=dCheckP(clPessoa);var s=c[p].sections.filter(function(x){return x.id===sid;})[0];var it=s&&s.items.filter(function(x){return x.id===iid;})[0];if(it){it.done=!it.done;saveCheckP(clPessoa,c);render();}},
-    clDel:function(p,sid,iid){var c=dCheckP(clPessoa);var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items=s.items.filter(function(x){return x.id!==iid;});saveCheckP(clPessoa,c);render();}},
-    clAdd:function(e,p,sid){if(e.key!=='Enter')return;var t=e.target.value.trim();if(!t)return;var c=dCheckP(clPessoa);var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items.push({id:'u'+Date.now(),text:t,done:false});s.open=true;saveCheckP(clPessoa,c);render();}},
+    clSec:function(p,sid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.open=!s.open;saveCheck(c);var el=$('#cls-'+sid);if(el)el.classList.toggle('open');}},
+    clToggle:function(p,sid,iid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];var it=s&&s.items.filter(function(x){return x.id===iid;})[0];if(it){it.done=!it.done;saveCheck(c);render();}},
+    clDel:function(p,sid,iid){var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items=s.items.filter(function(x){return x.id!==iid;});saveCheck(c);render();}},
+    clAdd:function(e,p,sid){if(e.key!=='Enter')return;var t=e.target.value.trim();if(!t)return;var c=dCheck();var s=c[p].sections.filter(function(x){return x.id===sid;})[0];if(s){s.items.push({id:'u'+Date.now(),text:t,done:false});s.open=true;saveCheck(c);render();}},
     gastoForm:gastoForm,metaForm:metaForm,
     chip:function(el){el.classList.toggle('on');},
     gastosTab:function(v){gastosView=v;render();},
