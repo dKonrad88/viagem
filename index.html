@@ -87,6 +87,13 @@
   .voo-times span{color:var(--muted);margin:0 5px;font-weight:400}
   .voo-times small{color:var(--muted);font-size:.7rem}
   .voo-meta{font-size:.74rem;color:var(--muted);margin-top:2px}
+  .res-item{border-top:1px solid var(--line);padding:9px 0}
+  .res-item:first-of-type{border-top:0}
+  .res-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .res-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--primary2);font-weight:600}
+  .res-acts{flex:none;white-space:nowrap}
+  .res-val{font-size:1rem;font-weight:600;margin-top:2px;word-break:break-word;cursor:pointer;line-height:1.4}
+  .res-val.muted{font-weight:400;font-size:.85rem;cursor:default}
   .bar{height:9px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:8px}
   .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#185FA5,#1a7a8a)}
   .kpi{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -407,6 +414,20 @@
     return '<div class="card"><h2>✈️ Voos</h2>'+
       (ida?'<div class="voo-grp">Ida</div>'+ida:'')+
       (volta?'<div class="voo-grp">Volta</div>'+volta:'')+'</div>';}
+  function dReservas(){var r=VIA.get('reservas',null);return Array.isArray(r)?r:[];}
+  function reservasCard(){
+    var rs=dReservas();
+    var items=rs.length?rs.map(function(it,i){
+      var val=it.valor?('<div class="res-val" onclick="VUI.resCopy('+i+')" title="tocar para copiar">'+esc(it.valor)+'</div>'):'<div class="res-val muted">— toque no ✎ para preencher</div>';
+      return '<div class="res-item"><div class="res-head"><span class="res-label">'+esc(it.label||'')+'</span><span class="res-acts">'+mini('✎','VUI.resForm('+i+')')+mini('🗑','VUI.resDel('+i+')')+'</span></div>'+val+'</div>';
+    }).join(''):'<div class="sub">Nada aqui ainda — toque em adicionar.</div>';
+    return '<div class="card"><h2>🎫 Reservas & Check-in</h2><div class="sub" style="margin:2px 0 8px">Códigos e o essencial pra check-in. Toque num valor para copiar.</div>'+items+'<button class="btn soft" style="margin-top:10px" onclick="VUI.resForm()">＋ Adicionar</button></div>';}
+  function resForm(i){
+    var rs=dReservas(), it=(typeof i==='number')?rs[i]:null;
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">'+(it?'✎ Editar':'＋ Nova reserva / código')+'</h2>'+
+      '<label class="lbl">Título</label><input class="f" id="rsLabel" placeholder="ex.: Localizador Latam (ida)" value="'+(it?esc(it.label||''):'')+'">'+
+      '<label class="lbl">Valor / detalhes</label><textarea class="f" id="rsVal" placeholder="ex.: ABC123">'+(it?esc(it.valor||''):'')+'</textarea>'+
+      '<button class="btn" onclick="VUI.resSave('+(typeof i==='number'?i:-1)+')">Salvar</button>');}
 
   /* ---- helpers ---- */
   function money(v){return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
@@ -447,7 +468,7 @@
     if(idxHoje>=0){var dh=rt[idxHoje],si=stopAtual(idxHoje),st=dh.stops&&dh.stops[si];prox='<div class="card"><div class="row between"><h2>Agora no roteiro</h2><span class="chip">Dia '+esc(dh.dia)+'</span></div>'+(st?'<div class="sub" style="margin-top:6px">'+esc(st.icone||'📍')+' <b>'+esc(st.titulo)+'</b>'+(st.hora?' · '+esc(st.hora):'')+'</div>':'')+'<button class="btn" style="margin-top:12px" onclick="VUI.focoAgora()">▶ Abrir Modo Foco</button></div>';}
     else if(rt.length&&rt[0]){var pd=rt[0];prox='<div class="card"><div class="row between"><h2>Primeiro dia</h2><span class="chip">Dia '+esc(pd.dia)+'</span></div><div class="sub" style="margin-top:4px">'+(pd.data?esc(pd.data)+' — ':'')+esc(pd.titulo||'')+'</div><button class="btn soft" style="margin-top:12px" onclick="VUI.go(\'roteiro\')">Ver roteiro completo</button></div>';}
     var rotSub=rt.length?'Seu dia a dia da viagem.':'Ainda sem roteiro — toque para montar o seu.';
-    return cd+voosCard()+
+    return cd+voosCard()+reservasCard()+
       prox+
       '<div class="card"><div class="row between" style="margin-bottom:8px"><h2>💸 Gastos</h2><span class="sub">'+pct+'% da meta</span></div>'+
         '<div class="kpi"><div class="k"><div class="l">Gasto até agora</div><div class="v">'+money(totalG)+'</div></div><div class="k"><div class="l">Meta</div><div class="v">'+money(meta)+'</div></div></div>'+
@@ -789,6 +810,10 @@
     join:function(){entrarPorCodigo();},
     dataForm:dataForm,
     dataSave:function(){var d=$('#dtStart').value;if(!d){toast('Escolha uma data.');return;}VIA.set('data',d);closeSheet();render();toast('Data salva ✓');},
+    resForm:resForm,
+    resSave:function(i){var label=($('#rsLabel').value||'').trim(), valor=($('#rsVal').value||'').trim();if(!label){toast('Dê um título.');return;}var rs=dReservas();if(i>=0&&rs[i]){rs[i]={label:label,valor:valor};}else{rs.push({label:label,valor:valor});}VIA.set('reservas',rs);closeSheet();render();toast('Salvo ✓');},
+    resDel:function(i){var rs=dReservas();rs.splice(i,1);VIA.set('reservas',rs);render();},
+    resCopy:function(i){var rs=dReservas(),it=rs[i];if(!it||!it.valor)return;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(it.valor);toast('Copiado: '+it.label);}else{toast(it.valor);}}catch(e){toast(it.valor);}},
     diaForm:diaForm,
     diaSave:function(i){var rt=dRoteiro().slice();var tit=($('#dyTit').value||'').trim();var data=($('#dyData').value||'').trim();var g=parseFloat(($('#dyGasto').value||'').replace(',','.'));if(!tit&&!data){toast('Preencha ao menos o título.');return;}
       if(i>=0&&rt[i]){rt[i]=Object.assign({},rt[i],{titulo:tit,data:data,gasto:isNaN(g)?rt[i].gasto:g});}
