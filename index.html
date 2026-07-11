@@ -367,7 +367,7 @@
   var CAT_DOTS={'Alimentação':'#fb923c','Transporte':'#60a5fa','Hospedagem':'#a78bfa','Parques':'#34d399','Compras':'#fbbf24','Farmácia':'#f87171','Outros':'#9ca3af'};
   var CL_PANELS=[['levar','🧳','Levar'],['comprar','🛍️','Comprar'],['visitar','📍','Visitar'],['previagem','✅','Pré-viagem']];
   var DOC_TIPOS=[['passport','🛂','Passaporte'],['ticket','✈️','Passagem'],['reservation','🏨','Reserva'],['voucher','🎟️','Voucher'],['card','💳','Cartão/Seguro'],['other','📄','Outro']];
-  var clPanel='levar', gastosView='lanc';
+  var clPanel='levar', gastosView='lanc', docGroupsOpen={};
   function dPessoas(){var p=VIA.get('pessoas',null);return (Array.isArray(p)&&p.length)?p:['Diego','Débora'];}
   function gItens(arr){return arr.map(function(t,i){return {id:'g'+i+'_'+Math.floor(Math.random()*1e6),text:t,done:false};});}
   var GENERIC_CL={
@@ -710,18 +710,27 @@
   }
   function docIcon(t){var f=DOC_TIPOS.filter(function(x){return x[0]===t;})[0];return f?f[1]:'📄';}
   function docLabel(t){var f=DOC_TIPOS.filter(function(x){return x[0]===t;})[0];return f?f[2]:'Outro';}
+  function docCard(d){
+    var sub=[docLabel(d.tipo),d.pessoa,d.validade?('val. '+d.validade.split('-').reverse().join('/')):''].filter(Boolean).join(' · ');
+    var link=d.link?'<a class="dl" href="'+esc(d.link)+'" target="_blank" rel="noopener">🔗 abrir link</a>':'';
+    var anexo=d.arquivo&&d.arquivo.path?'<a class="dl" style="cursor:pointer" onclick="VUI.docOpen('+d.id+')">📎 '+esc(d.arquivo.nome||'ver anexo')+'</a>':'';
+    var obs=d.obs?'<div class="ds">'+esc(d.obs)+'</div>':'';
+    return '<div class="doc"><div class="di">'+docIcon(d.tipo)+'</div><div class="dd"><div class="dn">'+esc(d.nome||'—')+' '+mini('✎','VUI.docEdit('+d.id+')')+'</div><div class="ds">'+esc(sub)+'</div>'+(d.numero?'<div class="ds">nº '+esc(d.numero)+'</div>':'')+anexo+link+obs+'</div><button class="del-btn" onclick="VUI.docDel('+d.id+')">✕</button></div>';
+  }
   function renderDocumentos(){
     var ds=dDocs();
     var multi='<div class="card"><label class="btn soft" style="display:block;text-align:center;cursor:pointer;margin:0">📎 Anexar vários arquivos<input type="file" multiple accept="image/*,application/pdf" style="display:none" onchange="VUI.docMulti(this)"></label><div class="sub" style="margin-top:6px;text-align:center">Escolha vários de uma vez — cria um documento por arquivo, com nome e categoria automáticos.</div></div>';
     if(!ds.length)return multi+'<div class="empty">Nenhum documento ainda.<br>Anexe vários acima, ou toque no + para adicionar um.</div>';
-    var lista=ds.map(function(d){
-      var sub=[docLabel(d.tipo),d.pessoa,d.validade?('val. '+d.validade.split('-').reverse().join('/')):''].filter(Boolean).join(' · ');
-      var link=d.link?'<a class="dl" href="'+esc(d.link)+'" target="_blank" rel="noopener">🔗 abrir link</a>':'';
-      var anexo=d.arquivo&&d.arquivo.path?'<a class="dl" style="cursor:pointer" onclick="VUI.docOpen('+d.id+')">📎 '+esc(d.arquivo.nome||'ver anexo')+'</a>':'';
-      var obs=d.obs?'<div class="ds">'+esc(d.obs)+'</div>':'';
-      return '<div class="doc"><div class="di">'+docIcon(d.tipo)+'</div><div class="dd"><div class="dn">'+esc(d.nome||'—')+' '+mini('✎','VUI.docEdit('+d.id+')')+'</div><div class="ds">'+esc(sub)+'</div>'+(d.numero?'<div class="ds">nº '+esc(d.numero)+'</div>':'')+anexo+link+obs+'</div><button class="del-btn" onclick="VUI.docDel('+d.id+')">✕</button></div>';
+    var known=DOC_TIPOS.map(function(t){return t[0];});
+    var grupos=DOC_TIPOS.map(function(t){
+      var docs=ds.filter(function(d){var tp=(known.indexOf(d.tipo)>=0)?d.tipo:'other';return tp===t[0];});
+      return {tipo:t[0],icon:t[1],label:t[2],docs:docs};
+    }).filter(function(g){return g.docs.length;});
+    var body=grupos.map(function(g){
+      var open=!!docGroupsOpen[g.tipo];
+      return '<div class="clsec'+(open?' open':'')+'"><div class="clsec-h" onclick="VUI.docGroup(\''+g.tipo+'\')"><span class="nm">'+g.icon+' '+esc(g.label)+'</span><span class="ct">'+g.docs.length+'</span><span class="dia-chev clsec-chev">▾</span></div><div class="clsec-body" style="padding:0 10px 8px">'+g.docs.map(docCard).join('')+'</div></div>';
     }).join('');
-    return multi+lista;
+    return multi+body;
   }
   function docForm(id){
     var d=(typeof id!=='undefined')?dDocs().filter(function(x){return x.id===id;})[0]:null;
@@ -852,6 +861,7 @@
     gastoDel:function(id){var gs=dGastos().filter(function(g){return g.id!==id;});VIA.set('gastos',gs);render();},
     metaSave:function(){var t=parseFloat(($('#mTotal').value||'').replace(',','.'))||80000,c=parseFloat(($('#mCambio').value||'').replace(',','.'))||5;VIA.set('meta',{total:t,cambio:c});closeSheet();render();toast('Meta atualizada ✓');},
     docForm:docForm, docEdit:function(id){docForm(id);}, docMulti:docMulti,
+    docGroup:function(t){docGroupsOpen[t]=!docGroupsOpen[t];render();},
     docSave:async function(id){var nome=$('#dNome').value.trim();if(!nome){toast('Dê um nome ao documento.');return;}
       var fi=$('#dFile'), file=fi&&fi.files&&fi.files[0], arquivo=null;
       if(file){if(file.size>DOC_MAX){toast('Arquivo grande demais (máx 20MB).');return;}
