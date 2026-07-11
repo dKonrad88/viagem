@@ -40,6 +40,14 @@
   .tile .ic{font-size:1.6rem}
   .tile .t{font-weight:600;margin-top:6px}
   .tile .s{font-size:.78rem;color:var(--muted);margin-top:2px}
+  .trips{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .trip-row{display:flex;align-items:center;gap:12px;width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;font-family:inherit;color:var(--ink);text-align:left}
+  .trip-row:active{background:var(--card)}
+  .trip-ic{font-size:1.15rem;flex:none;opacity:.9}
+  .trip-nm{flex:1;font-weight:500;font-size:.95rem}
+  .trip-go{flex:none;color:var(--muted);font-size:1.3rem;line-height:1}
+  .linkbtn{background:none;border:0;color:var(--muted);font-size:.85rem;cursor:pointer;font-family:inherit;padding:8px;text-decoration:none}
+  .linkbtn:active{color:var(--primary2)}
   .status{font-size:.85rem;margin-top:8px;min-height:1.1em}
   .status.err{color:var(--erro)} .status.ok{color:var(--ok)}
   .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60;display:none}
@@ -291,7 +299,7 @@
     if(code.length<4){setStatus('Digite o código.','err');return;}
     var r=await sb.rpc('entrar_por_codigo',{p_codigo:code});
     if(r.error){setStatus(/invalido/i.test(r.error.message)?'Código inválido.':(/expirado/i.test(r.error.message)?'Código expirado.':('Falha: '+r.error.message)),'err');return;}
-    espacos=await carregarEspacos(); await abrirViagem(r.data); toast('Entrou na viagem ✓');
+    espacos=await carregarEspacos(); closeSheet(); await abrirViagem(r.data); toast('Entrou na viagem ✓');
   }
   async function abrirViagem(id){
     espacoId=id; var e=espacos.filter(function(x){return x.id===id;})[0];
@@ -750,17 +758,19 @@
 
   /* ================= ROUTER ================= */
   function renderTrips(){
-    var grid;
+    var lista;
     if(espacos.length){
-      grid='<div class="grid" style="grid-template-columns:1fr">'+espacos.map(function(e){
-        return '<div class="tile" onclick="VUI.abrir(\''+e.id+'\')"><div class="ic">🧳</div><div class="t">'+esc(e.nome||'Viagem')+'</div><div class="s">toque para abrir</div></div>';
+      lista='<div class="trips">'+espacos.map(function(e){
+        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-nm">'+esc(e.nome||'Viagem')+'</span><span class="trip-go">›</span></button>';
       }).join('')+'</div>';
-    } else grid='<div class="empty">Você ainda não tem viagens.<br>Crie a primeira ou entre com um código.</div>';
-    return grid+
-      '<div class="card"><button class="btn" onclick="VUI.novaViagem()">＋ Nova viagem</button></div>'+
-      '<div class="card"><h2>Entrar numa viagem</h2><div class="sub" style="margin:2px 0 10px">Alguém te passou um código de convite?</div>'+
+    } else lista='<div class="empty">Você ainda não tem viagens.<br>Toque no + para criar a primeira.</div>';
+    return lista+
+      '<div style="text-align:center;margin-top:24px"><button class="linkbtn" onclick="VUI.joinForm()">🔑 Entrar com um código de convite</button></div>';
+  }
+  function joinForm(){
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:6px">🔑 Entrar com código</h2><div class="sub" style="margin-bottom:12px">Alguém te passou um código de convite? Digite abaixo.</div>'+
       '<input class="f" id="joinCode" autocapitalize="characters" placeholder="código (ex.: ABC123)">'+
-      '<button class="btn soft" onclick="VUI.join()">Entrar com código</button><div class="status" id="loStatus"></div></div>';
+      '<button class="btn" onclick="VUI.join()">Entrar</button><div class="status" id="loStatus"></div>');
   }
   function novaViagemForm(){
     openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">🧳 Nova viagem</h2>'+
@@ -786,6 +796,7 @@
     if(!espacoId){
       $('#hsub').textContent='Suas viagens';
       app.innerHTML=renderTrips();
+      if(fab)fab.style.display='flex';
       return;
     }
     if(view==='home'){
@@ -876,7 +887,8 @@
       VIA.set('documentos',ds);closeSheet();render();toast('Documento salvo ✓');},
     docOpen:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];if(!d||!d.arquivo||!d.arquivo.path)return;toast('Abrindo anexo…');var u=await docSignedUrl(d.arquivo.path);if(u)window.open(u,'_blank','noopener');else toast('Não consegui abrir o anexo.');},
     docDel:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];var ds=dDocs().filter(function(x){return x.id!==id;});VIA.set('documentos',ds);render();if(d&&d.arquivo&&d.arquivo.path&&sb){try{await sb.storage.from(DOC_BUCKET).remove([d.arquivo.path]);}catch(e){}}},
-    fab:function(){var f=SEC_FAB[view];if(f)f();}
+    joinForm:joinForm,
+    fab:function(){if(!espacoId){novaViagemForm();return;}var f=SEC_FAB[view];if(f)f();}
   };
 
   /* ---------- Configurações ---------- */
