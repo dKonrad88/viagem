@@ -666,30 +666,56 @@
     if(!sb)return null;var r=await sb.storage.from(DOC_BUCKET).createSignedUrl(path,3600);
     return (r&&r.data&&r.data.signedUrl)?r.data.signedUrl:null;
   }
+  function tipoFromName(n){n=(n||'').toLowerCase();
+    if(/passaport|passport/.test(n))return 'passport';
+    if(/disney|magic kingdom|epcot|hollywood|animal kingdom|universal|epic|island|volcano|ingresso|ticket|park/.test(n))return 'ticket';
+    if(/aluguel|carro|rental|locad|hertz|avis|alamo|budget|enterprise|sixt/.test(n))return 'reservation';
+    if(/reserva|hotel|hosped|booking|airbnb|casa/.test(n))return 'reservation';
+    if(/cupom|desconto|coupon|promo|perfumeland|simon|outlet|mall|millenia|shopping|old town|voucher|vmz/.test(n))return 'voucher';
+    return 'other';}
+  async function docMulti(inp){
+    if(!inp||!inp.files||!inp.files.length)return;
+    var files=[].slice.call(inp.files), ds=dDocs(), ok=0, i;
+    for(i=0;i<files.length;i++){
+      var f=files[i];
+      if(f.size>DOC_MAX){toast('"'+(f.name||'')+'" é grande demais (máx 20MB)');continue;}
+      toast('Enviando '+(i+1)+'/'+files.length+'…');
+      var ar=await docUpload(f); if(!ar)continue;
+      var nm=(f.name||'arquivo').replace(/\.[^.]+$/,'');
+      ds.push({id:Date.now()+i,nome:nm,tipo:tipoFromName(f.name),pessoa:'',numero:'',validade:'',link:'',obs:'',arquivo:ar});
+      ok++;
+    }
+    VIA.set('documentos',ds);render();toast(ok+' documento(s) anexado(s) ✓ — ajuste a categoria se precisar.');
+  }
   function docIcon(t){var f=DOC_TIPOS.filter(function(x){return x[0]===t;})[0];return f?f[1]:'📄';}
   function docLabel(t){var f=DOC_TIPOS.filter(function(x){return x[0]===t;})[0];return f?f[2]:'Outro';}
   function renderDocumentos(){
     var ds=dDocs();
-    if(!ds.length)return '<div class="empty">Nenhum documento.<br>Toque no + para adicionar passagens, reservas e vouchers.</div>';
-    return ds.map(function(d){
+    var multi='<div class="card"><label class="btn soft" style="display:block;text-align:center;cursor:pointer;margin:0">📎 Anexar vários arquivos<input type="file" multiple accept="image/*,application/pdf" style="display:none" onchange="VUI.docMulti(this)"></label><div class="sub" style="margin-top:6px;text-align:center">Escolha vários de uma vez — cria um documento por arquivo, com nome e categoria automáticos.</div></div>';
+    if(!ds.length)return multi+'<div class="empty">Nenhum documento ainda.<br>Anexe vários acima, ou toque no + para adicionar um.</div>';
+    var lista=ds.map(function(d){
       var sub=[docLabel(d.tipo),d.pessoa,d.validade?('val. '+d.validade.split('-').reverse().join('/')):''].filter(Boolean).join(' · ');
       var link=d.link?'<a class="dl" href="'+esc(d.link)+'" target="_blank" rel="noopener">🔗 abrir link</a>':'';
       var anexo=d.arquivo&&d.arquivo.path?'<a class="dl" style="cursor:pointer" onclick="VUI.docOpen('+d.id+')">📎 '+esc(d.arquivo.nome||'ver anexo')+'</a>':'';
       var obs=d.obs?'<div class="ds">'+esc(d.obs)+'</div>':'';
-      return '<div class="doc"><div class="di">'+docIcon(d.tipo)+'</div><div class="dd"><div class="dn">'+esc(d.nome||'—')+'</div><div class="ds">'+esc(sub)+'</div>'+(d.numero?'<div class="ds">nº '+esc(d.numero)+'</div>':'')+anexo+link+obs+'</div><button class="del-btn" onclick="VUI.docDel('+d.id+')">✕</button></div>';
+      return '<div class="doc"><div class="di">'+docIcon(d.tipo)+'</div><div class="dd"><div class="dn">'+esc(d.nome||'—')+' '+mini('✎','VUI.docEdit('+d.id+')')+'</div><div class="ds">'+esc(sub)+'</div>'+(d.numero?'<div class="ds">nº '+esc(d.numero)+'</div>':'')+anexo+link+obs+'</div><button class="del-btn" onclick="VUI.docDel('+d.id+')">✕</button></div>';
     }).join('');
+    return multi+lista;
   }
-  function docForm(){
-    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">📄 Novo documento</h2>'+
-      '<label class="lbl">Nome</label><input class="f" id="dNome" placeholder="ex.: Reserva Hotel Orlando">'+
-      '<label class="lbl">Tipo</label><select class="f" id="dTipo">'+DOC_TIPOS.map(function(t){return '<option value="'+t[0]+'">'+t[1]+' '+t[2]+'</option>';}).join('')+'</select>'+
-      '<label class="lbl">Pessoa</label><input class="f" id="dPessoa" placeholder="Diego, Débora, Todos…">'+
-      '<label class="lbl">Nº / código (opcional)</label><input class="f" id="dNumero" placeholder="localizador, nº do doc…">'+
-      '<label class="lbl">Validade / data (opcional)</label><input class="f" id="dVal" type="date">'+
-      '<label class="lbl">📎 Anexar arquivo (foto ou PDF, até 20MB)</label><input class="f" id="dFile" type="file" accept="image/*,application/pdf" style="padding:9px">'+
-      '<label class="lbl">Link (opcional)</label><input class="f" id="dLink" placeholder="https://…">'+
-      '<label class="lbl">Observações</label><textarea class="f" id="dObs" placeholder="detalhes, endereço, horário…"></textarea>'+
-      '<button class="btn" id="dSaveBtn" onclick="VUI.docSave()">Salvar documento</button>');
+  function docForm(id){
+    var d=(typeof id!=='undefined')?dDocs().filter(function(x){return x.id===id;})[0]:null;
+    var v=function(x){return d?esc(d[x]||''):'';};
+    var anexoInfo=d&&d.arquivo&&d.arquivo.path?'<div class="sub" style="margin:-4px 0 8px">📎 anexo atual: '+esc(d.arquivo.nome||'arquivo')+' (escolher outro substitui)</div>':'';
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">'+(d?'✎ Editar documento':'📄 Novo documento')+'</h2>'+
+      '<label class="lbl">Nome</label><input class="f" id="dNome" placeholder="ex.: Reserva Hotel Orlando" value="'+v('nome')+'">'+
+      '<label class="lbl">Tipo</label><select class="f" id="dTipo">'+DOC_TIPOS.map(function(t){return '<option value="'+t[0]+'"'+(d&&d.tipo===t[0]?' selected':'')+'>'+t[1]+' '+t[2]+'</option>';}).join('')+'</select>'+
+      '<label class="lbl">Pessoa</label><input class="f" id="dPessoa" placeholder="Diego, Débora, Todos…" value="'+v('pessoa')+'">'+
+      '<label class="lbl">Nº / código (opcional)</label><input class="f" id="dNumero" placeholder="localizador, nº do doc…" value="'+v('numero')+'">'+
+      '<label class="lbl">Validade / data (opcional)</label><input class="f" id="dVal" type="date" value="'+v('validade')+'">'+
+      '<label class="lbl">📎 Anexar arquivo (foto ou PDF, até 20MB)</label>'+anexoInfo+'<input class="f" id="dFile" type="file" accept="image/*,application/pdf" style="padding:9px">'+
+      '<label class="lbl">Link (opcional)</label><input class="f" id="dLink" placeholder="https://…" value="'+v('link')+'">'+
+      '<label class="lbl">Observações</label><textarea class="f" id="dObs" placeholder="detalhes, endereço, horário…">'+(d?esc(d.obs||''):'')+'</textarea>'+
+      '<button class="btn" id="dSaveBtn" onclick="VUI.docSave('+(d?d.id:'')+')">Salvar documento</button>');
   }
 
   /* ================= ROUTER ================= */
@@ -800,15 +826,18 @@
       var gs=dGastos();gs.push({id:Date.now(),desc:desc,cat:cat,moeda:moeda,valor:val,data:data,pagou:pagou,divide:divide});VIA.set('gastos',gs);closeSheet();render();toast('Gasto lançado ✓');},
     gastoDel:function(id){var gs=dGastos().filter(function(g){return g.id!==id;});VIA.set('gastos',gs);render();},
     metaSave:function(){var t=parseFloat(($('#mTotal').value||'').replace(',','.'))||80000,c=parseFloat(($('#mCambio').value||'').replace(',','.'))||5;VIA.set('meta',{total:t,cambio:c});closeSheet();render();toast('Meta atualizada ✓');},
-    docForm:docForm,
-    docSave:async function(){var nome=$('#dNome').value.trim();if(!nome){toast('Dê um nome ao documento.');return;}
+    docForm:docForm, docEdit:function(id){docForm(id);}, docMulti:docMulti,
+    docSave:async function(id){var nome=$('#dNome').value.trim();if(!nome){toast('Dê um nome ao documento.');return;}
       var fi=$('#dFile'), file=fi&&fi.files&&fi.files[0], arquivo=null;
       if(file){if(file.size>DOC_MAX){toast('Arquivo grande demais (máx 20MB).');return;}
         var b=$('#dSaveBtn');if(b){b.disabled=true;b.textContent='enviando arquivo…';}
         arquivo=await docUpload(file);
         if(b){b.disabled=false;b.textContent='Salvar documento';}
         if(!arquivo)return;}
-      var ds=dDocs();ds.push({id:Date.now(),nome:nome,tipo:$('#dTipo').value,pessoa:$('#dPessoa').value.trim(),numero:$('#dNumero').value.trim(),validade:$('#dVal').value,link:$('#dLink').value.trim(),obs:$('#dObs').value.trim(),arquivo:arquivo});
+      var ds=dDocs(), campos={nome:nome,tipo:$('#dTipo').value,pessoa:$('#dPessoa').value.trim(),numero:$('#dNumero').value.trim(),validade:$('#dVal').value,link:$('#dLink').value.trim(),obs:$('#dObs').value.trim()};
+      var ex=(typeof id!=='undefined'&&id!=='')?ds.filter(function(x){return x.id===id;})[0]:null;
+      if(ex){for(var k in campos)ex[k]=campos[k];if(arquivo)ex.arquivo=arquivo;}
+      else{campos.id=Date.now();campos.arquivo=arquivo;ds.push(campos);}
       VIA.set('documentos',ds);closeSheet();render();toast('Documento salvo ✓');},
     docOpen:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];if(!d||!d.arquivo||!d.arquivo.path)return;toast('Abrindo anexo…');var u=await docSignedUrl(d.arquivo.path);if(u)window.open(u,'_blank','noopener');else toast('Não consegui abrir o anexo.');},
     docDel:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];var ds=dDocs().filter(function(x){return x.id!==id;});VIA.set('documentos',ds);render();if(d&&d.arquivo&&d.arquivo.path&&sb){try{await sb.storage.from(DOC_BUCKET).remove([d.arquivo.path]);}catch(e){}}},
