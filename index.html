@@ -128,6 +128,10 @@
   .dia-d{font-size:.72rem;color:var(--muted)}
   .dia-t{font-weight:600;font-size:.92rem;margin-top:1px}
   .dia-g{font-size:.7rem;color:var(--primary2);font-weight:600;white-space:nowrap}
+  .dia-badges{display:flex;flex-direction:column;align-items:flex-end;gap:3px;white-space:nowrap;flex:none}
+  .dia-w{font-size:.7rem;color:var(--muted);font-weight:600;white-space:nowrap}
+  .dia-walk{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:2px 0 10px;font-size:.78rem;color:var(--muted);line-height:1.5}
+  .dia-walk b{color:var(--ink)}
   .dia-chev{color:var(--muted);transition:.2s}
   .dia.open .dia-chev{transform:rotate(180deg)}
   .dia-body{display:none;padding:0 14px 14px}
@@ -616,6 +620,25 @@
     }).join('');
     return '<table class="vtbl"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
   }
+  function fmtkm(x){var v=Math.round(x*10)/10;return (v%1===0?v.toFixed(0):v.toFixed(1)).replace('.',',')+' km';}
+  function stopWalk(s){
+    var ic=s.icone||'', t=(s.titulo||'')+' '+(s.endereco||'');
+    if(ic==='🎢'||/Magic Kingdom|Epic Universe|Universal Studios/.test(t)) return {k:9.5,tipo:'parque'};
+    var lj=s.lojas!=null?String(s.lojas):'';
+    var n=parseInt(lj.replace(/[^0-9]/g,''),10);
+    var shopIc=/🏷️|👟|🛍️|🏬|💄|⌚|🍎/.test(ic);
+    if((shopIc||(!isNaN(n)&&n>0))&&!/mercado/i.test(lj)) return {k:Math.max(0.35,Math.min(2.6,0.5+(isNaN(n)?1:n)*0.009)),tipo:'lojas'};
+    if(ic==='🎡'||/ICON|International Drive|orla|South Beach|Ocean Dr|Wynwood|Design District|Bayside|murais|Lincoln Rd/.test(t)) return {k:1.6,tipo:'outro'};
+    if(/mercado/i.test(lj)||/Walmart|Whole Foods|Publix|Target|Walgreens|CVS/.test(t)) return {k:0.5,tipo:'outro'};
+    return {k:0.3,tipo:'outro'};
+  }
+  function diaWalk(r){
+    var park=0,shop=0,outro=0;
+    (r.stops||[]).forEach(function(s){var w=stopWalk(s);
+      if(w.tipo==='parque')park=Math.max(park,w.k);
+      else if(w.tipo==='lojas')shop+=w.k;else outro+=w.k;});
+    return {total:park+shop+outro,park:park,shop:shop,outro:outro};
+  }
   function diaHtml(r,i){
     var stops=(r.stops||[]).map(function(s,si){return stopHtml(s,i,si);}).join('');
     var avisos=(r.avisos&&r.avisos.length)?r.avisos.map(function(a){return '<div class="aviso">⚠ <span>'+esc(a)+'</span></div>';}).join(''):'';
@@ -627,10 +650,17 @@
     var edic='<div class="dia-acts"><button class="actbtn" onclick="VUI.stopForm('+i+')">＋ Parada</button><button class="actbtn" onclick="VUI.diaForm('+i+')">✎ Editar dia</button><button class="actbtn" onclick="VUI.diaDel('+i+')">🗑 Excluir dia</button></div>';
     var semana=r.diaSemana?esc(r.diaSemana)+', ':'';
     var dataL=r.dataLonga?esc(r.dataLonga):esc(r.data||'');
-    var badge=r.gasto?'<span class="dia-g">US$ '+esc(r.gasto)+'</span>':'';
+    var wk=diaWalk(r);
+    var wbadge=(r.stops&&r.stops.length)?'<span class="dia-w">🚶 ~'+fmtkm(wk.total)+'</span>':'';
+    var gbadge=r.gasto?'<span class="dia-g">US$ '+esc(r.gasto)+'</span>':'';
+    var badge=(wbadge||gbadge)?'<div class="dia-badges">'+gbadge+wbadge+'</div>':'';
+    var walkline=(r.stops&&r.stops.length)?'<div class="dia-walk">🚶 <b>Caminhada estimada ~'+fmtkm(wk.total)+'</b>'+
+      (wk.park?' · '+fmtkm(wk.park)+' no parque':'')+
+      (wk.shop?' · <b>~'+fmtkm(wk.shop)+' dentro das lojas</b>':'')+
+      (wk.outro?' · '+fmtkm(wk.outro)+' no restante':'')+'</div>':'';
     var vazio=(!r.stops||!r.stops.length)?'<div class="sub" style="padding:4px 0 8px">Sem paradas ainda. Toque em <b>＋ Parada</b>.</div>':'';
     var tbl=(r.stops&&r.stops.length)?'<div class="dia-tabela" data-diaidx="'+i+'">'+tblHtml(r)+'</div>':'';
-    return '<div class="dia" id="dia-'+i+'"><div class="dia-head" onclick="VUI.toggleDia('+i+')"><div class="dia-n">'+esc(r.dia)+'</div><div class="dia-info"><div class="dia-d">'+semana+dataL+'</div><div class="dia-t">'+esc(r.titulo||'(sem título)')+'</div></div>'+badge+'<span class="dia-chev">▾</span></div><div class="dia-body">'+acts+avisos+vazio+'<div class="dia-stops">'+stops+'</div>'+tbl+edic+'</div></div>';
+    return '<div class="dia" id="dia-'+i+'"><div class="dia-head" onclick="VUI.toggleDia('+i+')"><div class="dia-n">'+esc(r.dia)+'</div><div class="dia-info"><div class="dia-d">'+semana+dataL+'</div><div class="dia-t">'+esc(r.titulo||'(sem título)')+'</div></div>'+badge+'<span class="dia-chev">▾</span></div><div class="dia-body">'+acts+walkline+avisos+vazio+'<div class="dia-stops">'+stops+'</div>'+tbl+edic+'</div></div>';
   }
   function renderRoteiro(){
     var rt=dRoteiro(), idxHoje=diaDeHoje();
