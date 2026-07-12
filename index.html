@@ -1062,11 +1062,12 @@
         '<div class="kpi"><div class="k"><div class="l">Total (3 pax)</div><div class="v">'+brlM(x.preco_total)+'</div></div>'+
           '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div></div>';
     }).join('');
+    var teto=(cfg.hotel_teto!=null&&cfg.hotel_teto!=='')?Math.round(+cfg.hotel_teto):250;
     var hLive=cfg.hotel_fonte==='serpapi';
     var hNome=cfg.hotel_nome?esc(cfg.hotel_nome):null;
     var hRat=(cfg.hotel_rating!=null&&cfg.hotel_rating!=='')?(' · ⭐ '+(+cfg.hotel_rating).toFixed(1).replace('.',',')):'';
     var hLink=cfg.hotel_link||'';
-    var hTeto=hLive?(cfg.hotel_over_teto?'<span class="chip status-chip st-warn">acima de €250</span>':'<span class="chip status-chip st-conf">≤ €250</span>'):'';
+    var hTeto=hLive?(cfg.hotel_over_teto?'<span class="chip status-chip st-warn">acima de €'+teto+'</span>':'<span class="chip status-chip st-conf">≤ €'+teto+'</span>'):'';
     var hotel='<div class="card"><div class="row between"><h2 style="font-size:1rem">🏨 Hotel</h2>'+
       (hLive?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
       (hNome?'<div class="row between" style="margin:6px 0 2px"><div class="sub"><b style="color:var(--ink)">'+hNome+'</b>'+hRat+' · 4★ centro</div>'+hTeto+'</div>':'')+
@@ -1074,6 +1075,9 @@
       '<div class="kpi"><div class="k"><div class="l">Total em euros</div><div class="v">'+eurM(hEUR)+'</div></div>'+
         '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div>'+
       (hLink?'<a class="btn soft" style="margin-top:10px;display:block;text-align:center;text-decoration:none" href="'+esc(hLink)+'" target="_blank" rel="noopener">🔗 Ver o hotel</a>':'')+
+      '<div class="row" style="margin-top:12px;gap:8px;align-items:flex-end"><div style="flex:1"><label class="lbl">Teto do hotel (€/noite)</label><input class="f" id="hotTeto" type="number" inputmode="decimal" min="20" max="2000" value="'+teto+'" style="margin:0"></div>'+
+        '<button class="btn soft" style="width:auto;margin:0;white-space:nowrap;padding:12px 14px" onclick="VUI.monTeto(this)">🔎 Testar</button></div>'+
+      '<div class="sub" style="margin-top:6px">Muda o teto e busca de novo — vê como fica o melhor combo com outro limite.</div>'+
       '</div>';
     var alvoChip=acima?'<span class="chip status-chip st-warn">acima do alvo</span>':'<span class="chip status-chip st-conf">dentro do alvo</span>';
     var totCard='<div class="card mon-total"><div class="gtot"><div class="v">'+brlM(tot)+'</div><div class="of">melhor combo · '+esc(melhor.titulo||'')+' (voo + hotel)</div></div>'+
@@ -1091,7 +1095,7 @@
       var linhas=combos.map(function(c){
         var win=comWin&&c.slug===comWin.slug;
         var det='voo '+brlM(c.voo)+(c.hotel_noite?(' + €'+c.hotel_noite+'/n'):'');
-        var badge=c.over_teto?' <span class="chip status-chip st-warn" style="font-size:.6rem;padding:1px 6px">hotel &gt;€250</span>':'';
+        var badge=c.over_teto?' <span class="chip status-chip st-warn" style="font-size:.6rem;padding:1px 6px">hotel &gt;€'+teto+'</span>':'';
         return '<div class="row between mon-pp"><div><b style="color:var(--ink)">'+esc(c.titulo||'')+'</b>'+(win?' <span style="color:var(--ok)">★</span>':'')+'<div class="sub">'+det+badge+'</div></div><div style="font-weight:700'+(win?';color:var(--ok)':'')+'">'+(c.total!=null?brlM(c.total):'—')+'</div></div>';
       }).join('');
       compCard='<div class="card"><h2 style="font-size:1rem">🗓️ Abril ou Maio?</h2><div class="sub" style="margin:4px 0 6px">Total voo + hotel por janela · ★ = melhor combinação.</div>'+linhas+'</div>';
@@ -1253,6 +1257,22 @@
       }catch(e){}
       if(btn){btn.disabled=false;btn.textContent='🔄 Atualizar agora';}
       toast(ok?'Preços atualizados ✓':'Busca disparada — atualizando…');
+      monitorRender('monWrap');
+    },
+    monTeto:async function(btn){
+      var el=document.getElementById('hotTeto');
+      var v=el?parseFloat((el.value||'').replace(',','.')):NaN;
+      if(!v||v<20){toast('Informe um teto em euros (ex.: 250).');return;}
+      v=Math.round(Math.min(2000,v));
+      if(btn){btn.disabled=true;btn.textContent='salvando…';}
+      try{
+        var s=await sb.rpc('set_hotel_teto',{p_teto:v});
+        if(s&&s.error){toast('Falha ao salvar teto: '+s.error.message);if(btn){btn.disabled=false;btn.textContent='🔎 Testar';}return;}
+        if(btn)btn.textContent='buscando hotel…';
+        await fetch(HOTEL_FN,{method:'POST'}).catch(function(){return null;});
+      }catch(e){}
+      if(btn){btn.disabled=false;btn.textContent='🔎 Testar';}
+      toast('Buscando com teto € '+v+'…');
       monitorRender('monWrap');
     },
     fab:function(){if(!espacoId){novaViagemForm();return;}var f=SEC_FAB[view];if(f)f();}
