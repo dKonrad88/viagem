@@ -234,6 +234,9 @@
   .mchip{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:5px 11px;font-size:.8rem;cursor:pointer;opacity:.42;transition:.15s;font-family:inherit}
   .mchip.on{opacity:1;color:var(--ink);border-color:var(--mc);box-shadow:inset 0 0 0 1px var(--mc)}
   .mapcanvas{position:relative;z-index:0;height:58vh;min-height:320px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:var(--card2)}
+  .mtogrow{margin-top:8px}
+  .mtoggle{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:5px 12px;font-size:.8rem;cursor:pointer;font-family:inherit;transition:.15s;opacity:.5}
+  .mtoggle.on{opacity:1;color:var(--ink);border-color:var(--primary2);box-shadow:inset 0 0 0 1px var(--primary2)}
   .mapcount{text-align:center;margin-top:8px}
   .mpin span{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:15px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55)}
   .leaflet-popup-content{font-family:inherit;font-size:.9rem}
@@ -877,7 +880,8 @@
     var days=[];pts.forEach(function(p){(p.dias||[]).forEach(function(d){if(days.indexOf(d)<0)days.push(d);});});days.sort(function(a,b){return a-b;});
     var dayOpts='<option value="all">Todos os dias</option>'+days.map(function(d){return '<option value="'+d+'">Dia '+d+'</option>';}).join('');
     var chips=Object.keys(MCAT).map(function(k){return '<button class="mchip on" data-cat="'+k+'" style="--mc:'+MCAT[k].c+'">'+MCAT[k].e+' '+MCAT[k].n+'</button>';}).join('');
-    el.innerHTML='<div class="mapctl"><select id="mapDay" class="f mapsel">'+dayOpts+'</select><div class="mchips">'+chips+'</div></div>'+
+    el.innerHTML='<div class="mapctl"><select id="mapDay" class="f mapsel">'+dayOpts+'</select><div class="mchips">'+chips+'</div>'+
+      '<div class="mtogrow"><button class="mtoggle on" id="mapRaio">◎ Raio do dia</button></div></div>'+
       '<div id="mapCanvas" class="mapcanvas"></div><div class="sub mapcount" id="mapCount"></div>';
     if(window.__vmap){try{window.__vmap.remove();}catch(e){}window.__vmap=null;}
     var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
@@ -885,9 +889,27 @@
     var map=L.map('mapCanvas',{layers:[sat],zoomControl:true,attributionControl:false}).setView([28.44,-81.47],10);
     window.__vmap=map;
     L.control.layers({'Satélite':sat,'Mapa':streets},null,{position:'topright'}).addTo(map);
+    var raioLayer=L.layerGroup().addTo(map);
     var layer=L.layerGroup().addTo(map);
-    var day='all',catOn={};Object.keys(MCAT).forEach(function(k){catOn[k]=true;});
+    var day='all',showRaio=true,catOn={};Object.keys(MCAT).forEach(function(k){catOn[k]=true;});
     function mIcon(cat){var m=MCAT[cat]||MCAT.base;return L.divIcon({className:'mpin',html:'<span style="background:'+m.c+'">'+m.e+'</span>',iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-15]});}
+    function dayColor(d){return 'hsl('+((d*47)%360)+',80%,58%)';}
+    function drawRaio(){
+      raioLayer.clearLayers();
+      if(!showRaio)return;
+      var dd=day==='all'?days:[day],single=(day!=='all');
+      dd.forEach(function(dn){
+        var dp=pts.filter(function(p){return (p.dias||[]).indexOf(dn)>=0;});
+        if(!dp.length)return;
+        var la=0,lo=0;dp.forEach(function(p){la+=p.lat;lo+=p.lng;});la/=dp.length;lo/=dp.length;
+        var c=L.latLng(la,lo),r=450;dp.forEach(function(p){r=Math.max(r,c.distanceTo([p.lat,p.lng]));});r+=350;
+        if(!single&&r>30000)return; /* no overview, pula dias de deslocamento (Orlando<->Miami) que viram círculos gigantes */
+        var col=dayColor(dn);
+        var circ=L.circle([la,lo],{radius:r,color:col,weight:single?2.5:1.6,opacity:single?.95:.55,fillColor:col,fillOpacity:single?.12:.04});
+        circ.bindPopup('<b>Dia '+dn+'</b> · '+dp.length+' lugares');
+        circ.addTo(raioLayer);
+      });
+    }
     function draw(){
       layer.clearLayers();var b=[];
       pts.forEach(function(p){
@@ -897,12 +919,14 @@
         mk.bindPopup('<b>'+esc(p.nome)+'</b><br><span style="color:#8aa">Dia '+((p.dias||[]).join(', '))+'</span>');
         mk.addTo(layer);b.push([p.lat,p.lng]);
       });
+      drawRaio();
       var cnt=document.getElementById('mapCount');if(cnt)cnt.textContent=b.length+' '+(b.length===1?'lugar':'lugares')+(day==='all'?'':' no Dia '+day);
       if(b.length)map.fitBounds(b,{padding:[36,36],maxZoom:15});
     }
     draw();
     setTimeout(function(){map.invalidateSize();draw();},80);
     document.getElementById('mapDay').addEventListener('change',function(){day=this.value==='all'?'all':parseInt(this.value,10);draw();});
+    document.getElementById('mapRaio').addEventListener('click',function(){showRaio=!showRaio;this.classList.toggle('on',showRaio);drawRaio();});
     el.querySelectorAll('.mchip').forEach(function(bt){bt.addEventListener('click',function(){var c=bt.getAttribute('data-cat');catOn[c]=!catOn[c];bt.classList.toggle('on',catOn[c]);draw();});});
   }
 
