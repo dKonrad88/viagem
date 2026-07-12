@@ -925,6 +925,7 @@
   function fmtUpd(ts){try{var d=new Date(ts);if(isNaN(d))return esc(String(ts));return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return esc(String(ts));}}
   function monPP(nome,desc,val){return '<div class="row between mon-pp"><div><b>'+esc(nome)+'</b> <span class="sub">· '+esc(desc)+'</span></div><div style="font-weight:700">'+brlM(val)+'</div></div>';}
   function bookingUrl(nome,ci,co){if(!nome||!ci||!co)return '';return 'https://www.booking.com/searchresults.html?ss='+encodeURIComponent(nome+', Paris')+'&checkin='+encodeURIComponent(ci)+'&checkout='+encodeURIComponent(co)+'&group_adults=2&no_rooms=1&group_children=0';}
+  function nivelChip(n){if(n==='low')return '<span class="chip status-chip st-conf">🟢 preço baixo</span>';if(n==='high')return '<span class="chip status-chip st-warn">🔴 preço alto</span>';if(n==='typical')return '<span class="chip">preço típico</span>';return '';}
   var monChartView='total';
   function monDMY(d){var p=String(d).split('-');return p.length===3?(p[2]+'/'+p[1]):esc(String(d));}
   function monChartSVG(hist,view){
@@ -1085,7 +1086,9 @@
           (live?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
         '<div class="sub" style="margin:4px 0 10px">'+esc(x.origem||'')+' → '+esc(x.destino||'')+' · '+esc(x.cia||'')+(best?' · <b style="color:var(--ok)">★ melhor combo</b>':'')+'</div>'+
         '<div class="kpi"><div class="k"><div class="l">Total (3 pax)</div><div class="v">'+brlM(x.preco_total)+'</div></div>'+
-          '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div></div>';
+          '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div>'+
+        (x.preco_nivel?'<div class="row between" style="margin-top:10px"><span>'+nivelChip(x.preco_nivel)+'</span>'+(x.preco_tipico_min?'<span class="sub">típico '+brlM(x.preco_tipico_min)+'–'+brlM(x.preco_tipico_max)+'</span>':'')+'</div>':'')+
+        '</div>';
     }).join('');
     var teto=(cfg.hotel_teto!=null&&cfg.hotel_teto!=='')?Math.round(+cfg.hotel_teto):250;
     var hEst=(cfg.hotel_estrelas!=null&&cfg.hotel_estrelas!=='')?Math.round(+cfg.hotel_estrelas):4;
@@ -1100,7 +1103,7 @@
     var hotel='<div class="card"><div class="row between"><h2 style="font-size:1rem">🏨 Hotel</h2>'+
       (hLive?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
       (hNome?'<div class="row between" style="margin:6px 0 2px"><div class="sub"><b style="color:var(--ink)">'+hNome+'</b>'+hRat+' · '+hEst+'★ centro</div>'+hTeto+'</div>':'')+
-      '<div class="sub" style="margin:2px 0 10px">Casal (Diego + Débora) · nas datas de '+esc(melhor.titulo||'')+' · '+eurM(cfg.hotel_noite)+'/noite × '+(+cfg.hotel_noites)+' noites · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
+      '<div class="sub" style="margin:2px 0 10px">Casal (Diego + Débora) · nas datas de '+esc(melhor.titulo||'')+' · '+eurM(cfg.hotel_noite)+'/noite × '+(+cfg.hotel_noites)+' noites · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+(cfg.fx_fonte==='frankfurter'?' <span style="color:#3fb6c8">(ao vivo)</span>':'')+'</div>'+
       '<div class="kpi"><div class="k"><div class="l">Total em euros</div><div class="v">'+eurM(hEUR)+'</div></div>'+
         '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div>'+
       ((hLink||bLink)?'<div class="row" style="margin-top:10px;gap:8px">'+
@@ -1120,10 +1123,21 @@
         '<button class="btn soft" style="width:auto;margin:0;white-space:nowrap;padding:12px 14px" onclick="VUI.monTeto(this)">🔎 Testar</button></div>'+
       '<div class="sub" style="margin-top:6px">Escolhe o padrão e o teto, toca em Testar — vê como fica o melhor combo. €150 já é faixa de 3★.</div>'+
       '</div>';
-    var alvoChip=acima?'<span class="chip status-chip st-warn">acima do alvo</span>':'<span class="chip status-chip st-conf">dentro do alvo</span>';
+    var alvoTot=(cfg.alvo_total!=null&&cfg.alvo_total!=='')?+cfg.alvo_total:null;
+    var abaixoAlvo=(alvoTot!=null&&tot<=alvoTot);
+    var histTot=hist.map(function(h){return +h.total_brl;}).filter(function(v){return v>0;});
+    var histMin=histTot.length?Math.min.apply(null,histTot):null;
+    var novoBaixo=(histMin!=null&&hist.length>1&&tot<=histMin);
+    var banner='';
+    if(abaixoAlvo)banner='<div class="card" style="background:rgba(31,157,99,.16);border-color:var(--ok)"><div><b style="color:var(--ok)">🎯 Alvo atingido!</b> O melhor combo ('+brlM(tot)+') está no seu alvo de '+brlM(alvoTot)+'.</div></div>';
+    else if(novoBaixo)banner='<div class="card" style="background:rgba(26,122,138,.14);border-color:#1a7a8a"><div><b style="color:#3fb6c8">📉 Menor preço até agora</b> — '+brlM(tot)+' é o total mais baixo já registrado.</div></div>';
+    var alvoLinha=alvoTot!=null?'<div class="row between" style="margin-top:12px"><span class="sub">Seu alvo: '+brlM(alvoTot)+'</span>'+(abaixoAlvo?'<span class="chip status-chip st-conf">dentro ✓</span>':'<span class="chip status-chip st-warn">R$ '+Math.round(tot-alvoTot).toLocaleString('pt-BR')+' acima</span>')+'</div>':'';
+    var alvoVal=alvoTot!=null?Math.round(alvoTot):'';
     var totCard='<div class="card mon-total"><div class="gtot"><div class="v">'+brlM(tot)+'</div><div class="of">melhor combo · '+esc(melhor.titulo||'')+' (voo + hotel)</div></div>'+
-      '<div class="row between" style="margin-top:12px"><span class="sub">Menor por pessoa (voo): <b style="color:var(--ink)">'+brlM(menorPP)+'</b></span>'+alvoChip+'</div>'+
-      '<div class="sub" style="margin-top:4px">Alvo por pessoa: '+brlM(cfg.alvo_pp)+'</div></div>';
+      alvoLinha+
+      '<div class="row" style="margin-top:12px;gap:8px;align-items:flex-end"><div style="flex:1"><label class="lbl">🔔 Me avise quando o total ≤ (R$)</label><input class="f" id="alvoTot" type="number" inputmode="numeric" value="'+alvoVal+'" placeholder="ex.: 28000" style="margin:0"></div>'+
+        '<button class="btn soft" style="width:auto;margin:0;padding:12px 14px" onclick="VUI.monAlvo(this)">Salvar</button></div>'+
+      '<div class="sub" style="margin-top:6px">Define um alvo — o app destaca aqui quando o combo bater esse valor.</div></div>';
     var pp='<div class="card"><h2 style="font-size:1rem">👥 Por pessoa</h2>'+
       '<div class="sub" style="margin:4px 0 6px">Diego e Débora dividem o hotel; o fotógrafo entra só no voo.</div>'+
       monPP('Diego','voo + ½ hotel',menorPP+mh)+
@@ -1147,7 +1161,7 @@
         '<span class="pill'+(monChartView==='voo'?' on':'')+'" onclick="VUI.monChart(\'voo\')">Só voo</span>'+
       '</div>'+monChartSVG(hist,monChartView)+'</div>';
     var upd=melhor.atualizado_em?('<div class="sub" style="text-align:center;margin-top:14px">atualizado em '+fmtUpd(melhor.atualizado_em)+'</div>'):'';
-    el.innerHTML=head+compCard+janelas+hotel+totCard+chartCard+pp+upd;
+    el.innerHTML=head+banner+compCard+janelas+hotel+totCard+chartCard+pp+upd;
   }
 
   /* ================= ROUTER ================= */
@@ -1306,6 +1320,17 @@
       monitorRender('monWrap');
     },
     monChart:function(v){monChartView=v;monitorRender('monWrap');},
+    monAlvo:async function(btn){
+      var el=document.getElementById('alvoTot');
+      var raw=el?(el.value||'').replace(/[^0-9.,]/g,'').replace(',','.'):'';
+      var v=raw?parseFloat(raw):0;
+      var alvo=(v&&v>0)?Math.round(v):null;
+      if(btn){btn.disabled=true;btn.textContent='salvando…';}
+      try{var s=await sb.rpc('set_alvo_total',{p_alvo:alvo});if(s&&s.error){toast('Falha: '+s.error.message);if(btn){btn.disabled=false;btn.textContent='Salvar';}return;}}catch(e){}
+      if(btn){btn.disabled=false;btn.textContent='Salvar';}
+      toast(alvo?'Alvo salvo: R$ '+alvo.toLocaleString('pt-BR'):'Alerta de alvo removido');
+      monitorRender('monWrap');
+    },
     monPill:function(el){var w=el.parentNode;[].forEach.call(w.querySelectorAll('.pill'),function(p){p.classList.remove('on');});el.classList.add('on');},
     monTeto:async function(btn){
       var el=document.getElementById('hotTeto');
