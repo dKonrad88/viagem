@@ -200,6 +200,22 @@
   .doc .ds{font-size:.74rem;color:var(--muted);margin-top:1px}
   .doc a.dl{color:var(--primary2);font-size:.78rem;text-decoration:none;word-break:break-all}
   .empty{text-align:center;color:var(--muted);font-size:.88rem;padding:26px 10px}
+  /* ---- Visão Tabela do dia ---- */
+  .actbtn.tbl{border-color:transparent;background:var(--card2)}
+  .dia:not(.tblmode) .t-off,.dia.tblmode .t-on{display:none}
+  .dia-tabela{overflow-x:auto;margin:2px 0 10px;-webkit-overflow-scrolling:touch}
+  .dia:not(.tblmode) .dia-tabela{display:none}
+  .dia.tblmode .dia-stops{display:none}
+  .vtbl{border-collapse:collapse;width:100%;min-width:560px;font-size:.75rem}
+  .vtbl th{background:var(--card2);color:var(--muted);font-weight:600;font-size:.62rem;letter-spacing:.03em;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left;vertical-align:middle}
+  .vtbl td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--ink)}
+  .vtbl tr:last-child td{border-bottom:0}
+  .vtbl td.num{font-variant-numeric:tabular-nums;color:var(--muted)}
+  .vtbl td.c-par{white-space:normal;min-width:150px;color:var(--ink);font-weight:500}
+  .vtbl td.folga{background:rgba(200,138,46,.14);color:#e0a342;font-weight:600}
+  .vtbl th .mv{border:none;background:transparent;color:var(--primary2);cursor:pointer;font-size:.85rem;padding:5px 5px;font-family:inherit;line-height:1;border-radius:6px}
+  .vtbl th .mv:active{background:var(--primary2);color:#fff}
+  .vtbl th{padding:2px 4px}
 </style>
 </head>
 <body>
@@ -507,19 +523,62 @@
     var ed=mini('✎','VUI.stopForm('+i+','+si+')')+mini('🗑','VUI.stopDel('+i+','+si+')');
     return '<div class="stop"><div class="stop-h">'+esc(s.hora||'')+'</div><div class="stop-ic">'+esc(s.icone||'📍')+'</div><div class="stop-c"><div class="stop-t">'+esc(s.titulo||'')+' '+ed+'</div>'+al+meta+det+'</div></div>';
   }
+  /* ---- Visão Tabela do dia ---- */
+  var TBL_DEF=['funciona','sai','desloc','chega','tempo','parada','lojas'];
+  var TBL_LB={funciona:'Funciona',sai:'Sai',desloc:'Desloc',chega:'Chega',tempo:'Tempo lá',parada:'Parada',lojas:'Lojas'};
+  function tblCols(){try{var c=JSON.parse(localStorage.getItem('via_tblcols'));if(Array.isArray(c)&&c.length===TBL_DEF.length&&c.every(function(k){return TBL_DEF.indexOf(k)>=0;}))return c;}catch(e){}return TBL_DEF.slice();}
+  function tblMin(h){h=String(h==null?'':h).replace('~','').trim();var m=h.match(/(\d{1,2})h(\d{2})?/);return m?(+m[1])*60+(+(m[2]||0)):null;}
+  function tblDesMin(d){var m=String(d==null?'':d).match(/(\d+)\s*min/);return m?+m[1]:0;}
+  function tblHM(m){var h=Math.floor(m/60),mm=m%60;return (h<10?'0'+h:h)+'h'+(mm<10?'0'+mm:mm);}
+  function tblDur(x){if(x==null||x<0)return '—';var h=Math.floor(x/60),mm=x%60;return h?(h+'h'+(mm<10?'0'+mm:mm)):(mm+'min');}
+  function tblCell(k,s,i,stops){
+    if(k==='funciona')return esc(s.horarioFunc||'—');
+    if(k==='chega')return esc(s.hora||'—');
+    if(k==='desloc'){var d=String(s.desloc==null?'':s.desloc).trim();if(!d)return '—';var mm=d.match(/~?\s*\d+(?:\s*[–-]\s*\d+)?\s*min/i);if(mm)return esc(mm[0].replace(/\s+/g,' ').trim());if(/local/i.test(d))return 'no local';return '—';}
+    if(k==='lojas')return esc(s.lojas||'—');
+    if(k==='parada')return esc((s.icone?s.icone+' ':'')+(s.titulo||''));
+    var ch=tblMin(s.hora), nx=stops[i+1]?tblMin(stops[i+1].hora):null;
+    if(ch==null||nx==null)return '—';
+    var sai=nx-tblDesMin(s.desloc), temp=sai-ch;
+    if(k==='sai')return esc(tblHM(sai));
+    if(k==='tempo')return esc(tblDur(temp));
+    return '—';
+  }
+  function tblHtml(r){
+    var cols=tblCols(), stops=r.stops||[];
+    var head=cols.map(function(k,ci){
+      var lft=ci>0?'<button class="mv" onclick="VUI.tblMove(\''+k+'\',-1)" aria-label="mover ◀">◀</button>':'';
+      var rgt=ci<cols.length-1?'<button class="mv" onclick="VUI.tblMove(\''+k+'\',1)" aria-label="mover ▶">▶</button>':'';
+      return '<th class="'+(k==='parada'?'c-par':'')+'">'+lft+esc(TBL_LB[k])+rgt+'</th>';
+    }).join('');
+    var body=stops.map(function(s,i){
+      var ch=tblMin(s.hora), nx=stops[i+1]?tblMin(stops[i+1].hora):null;
+      var folga=false;
+      if(ch!=null&&nx!=null){var temp=(nx-tblDesMin(s.desloc))-ch;if((s.lojas==='1'||s.lojas==='2'||!s.lojas)&&temp>=150)folga=true;}
+      var tds=cols.map(function(k){
+        var cls=k==='parada'?'c-par':(k==='funciona'?'':'num');
+        if(k==='tempo'&&folga)cls+=' folga';
+        return '<td class="'+cls+'">'+tblCell(k,s,i,stops)+'</td>';
+      }).join('');
+      return '<tr>'+tds+'</tr>';
+    }).join('');
+    return '<table class="vtbl"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
+  }
   function diaHtml(r,i){
     var stops=(r.stops||[]).map(function(s,si){return stopHtml(s,i,si);}).join('');
     var avisos=(r.avisos&&r.avisos.length)?r.avisos.map(function(a){return '<div class="aviso">⚠ <span>'+esc(a)+'</span></div>';}).join(''):'';
     var mapsU=diaMapsUrl(r);
     var acts='<div class="dia-acts">'+
       ((r.stops&&r.stops.length)?'<button class="actbtn" onclick="VUI.foco('+i+')">▶ Modo Foco</button>':'')+
-      (mapsU?'<a class="actbtn map" href="'+mapsU+'" target="_blank" rel="noopener">🗺️ Rota do dia</a>':'')+'</div>';
+      (mapsU?'<a class="actbtn map" href="'+mapsU+'" target="_blank" rel="noopener">🗺️ Rota do dia</a>':'')+
+      ((r.stops&&r.stops.length)?'<button class="actbtn tbl" onclick="VUI.tabela('+i+')"><span class="t-on">📊 Tabela</span><span class="t-off">📋 Lista</span></button>':'')+'</div>';
     var edic='<div class="dia-acts"><button class="actbtn" onclick="VUI.stopForm('+i+')">＋ Parada</button><button class="actbtn" onclick="VUI.diaForm('+i+')">✎ Editar dia</button><button class="actbtn" onclick="VUI.diaDel('+i+')">🗑 Excluir dia</button></div>';
     var semana=r.diaSemana?esc(r.diaSemana)+', ':'';
     var dataL=r.dataLonga?esc(r.dataLonga):esc(r.data||'');
     var badge=r.gasto?'<span class="dia-g">US$ '+esc(r.gasto)+'</span>':'';
     var vazio=(!r.stops||!r.stops.length)?'<div class="sub" style="padding:4px 0 8px">Sem paradas ainda. Toque em <b>＋ Parada</b>.</div>':'';
-    return '<div class="dia" id="dia-'+i+'"><div class="dia-head" onclick="VUI.toggleDia('+i+')"><div class="dia-n">'+esc(r.dia)+'</div><div class="dia-info"><div class="dia-d">'+semana+dataL+'</div><div class="dia-t">'+esc(r.titulo||'(sem título)')+'</div></div>'+badge+'<span class="dia-chev">▾</span></div><div class="dia-body">'+acts+avisos+vazio+stops+edic+'</div></div>';
+    var tbl=(r.stops&&r.stops.length)?'<div class="dia-tabela" data-diaidx="'+i+'">'+tblHtml(r)+'</div>':'';
+    return '<div class="dia" id="dia-'+i+'"><div class="dia-head" onclick="VUI.toggleDia('+i+')"><div class="dia-n">'+esc(r.dia)+'</div><div class="dia-info"><div class="dia-d">'+semana+dataL+'</div><div class="dia-t">'+esc(r.titulo||'(sem título)')+'</div></div>'+badge+'<span class="dia-chev">▾</span></div><div class="dia-body">'+acts+avisos+vazio+'<div class="dia-stops">'+stops+'</div>'+tbl+edic+'</div></div>';
   }
   function renderRoteiro(){
     var rt=dRoteiro(), idxHoje=diaDeHoje();
@@ -852,6 +911,9 @@
     secSave:function(){var nome=($('#secNome').value||'').trim();if(!nome){toast('Dê um nome à seção.');return;}var c=dCheck();c[clPanel].sections.push({id:'sec'+Date.now(),name:nome,open:true,items:[]});saveCheck(c);closeSheet();render();toast('Seção criada ✓');},
     secDel:function(p,sid){if(!window.confirm('Excluir esta seção e seus itens?'))return;var c=dCheck();c[p].sections=c[p].sections.filter(function(x){return x.id!==sid;});saveCheck(c);render();},
     toggleDia:function(i){var el=$('#dia-'+i);if(el)el.classList.toggle('open');},
+    tabela:function(i){var el=$('#dia-'+i);if(el)el.classList.toggle('tblmode');},
+    tblMove:function(key,dir){var cols=tblCols();var at=cols.indexOf(key);var to=at+dir;if(at<0||to<0||to>=cols.length)return;cols.splice(at,1);cols.splice(to,0,key);try{localStorage.setItem('via_tblcols',JSON.stringify(cols));}catch(e){}
+      [].forEach.call(document.querySelectorAll('.dia-tabela'),function(w){var di=+w.getAttribute('data-diaidx');var r=dRoteiro()[di];if(r)w.innerHTML=tblHtml(r);});},
     foco:focoOpen,
     focoAgora:function(){var idx=diaDeHoje();if(idx<0)idx=0;focoOpen(idx);},
     focoNav:focoNav,focoClose:focoClose,
