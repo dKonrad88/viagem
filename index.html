@@ -924,6 +924,29 @@
   function eurM(n){return '€ '+Math.round(+n||0).toLocaleString('pt-BR');}
   function fmtUpd(ts){try{var d=new Date(ts);if(isNaN(d))return esc(String(ts));return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return esc(String(ts));}}
   function monPP(nome,desc,val){return '<div class="row between mon-pp"><div><b>'+esc(nome)+'</b> <span class="sub">· '+esc(desc)+'</span></div><div style="font-weight:700">'+brlM(val)+'</div></div>';}
+  var monChartView='total';
+  function monDMY(d){var p=String(d).split('-');return p.length===3?(p[2]+'/'+p[1]):esc(String(d));}
+  function monChartSVG(hist,view){
+    var key=view==='voo'?'voo_brl':'total_brl';
+    var pts=[];
+    for(var i=0;i<hist.length;i++){var v=hist[i][key];if(v!=null&&v!=='')pts.push({d:hist[i].dia,v:+v});}
+    if(!pts.length)return '<div class="sub" style="text-align:center;padding:14px 0">Ainda sem histórico. Um ponto é gravado a cada busca diária.</div>';
+    var col=view==='voo'?'#3fb6c8':'#37c07d';
+    var last=pts[pts.length-1].v, vals=pts.map(function(p){return p.v;});
+    var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+    if(pts.length===1)return '<div style="text-align:center;padding:10px 0"><div style="font-size:1.5rem;font-weight:700;color:var(--ink)">'+brlM(last)+'</div><div class="sub">'+monDMY(pts[0].d)+' · 1 dia coletado — a linha se forma nos próximos dias</div></div>';
+    var W=320,H=110,pad=10,padB=18,n=pts.length,rng=(mx-mn)||1;
+    var X=function(i){return pad+i*(W-2*pad)/(n-1);}, Y=function(v){return (H-padB)-(v-mn)/rng*(H-padB-pad);};
+    var line='';for(var k=0;k<n;k++)line+=(k?' L':'M')+X(k).toFixed(1)+' '+Y(pts[k].v).toFixed(1);
+    var area=line+' L'+X(n-1).toFixed(1)+' '+(H-padB)+' L'+X(0).toFixed(1)+' '+(H-padB)+' Z';
+    var dots='';for(var m=0;m<n;m++)dots+='<circle cx="'+X(m).toFixed(1)+'" cy="'+Y(pts[m].v).toFixed(1)+'" r="2.3" fill="'+col+'"/>';
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;overflow:visible">'+
+      '<path d="'+area+'" fill="'+col+'" opacity="0.13"/>'+
+      '<path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+dots+
+      '<text x="'+pad+'" y="'+(H-4)+'" style="fill:var(--muted)" font-size="9">'+monDMY(pts[0].d)+'</text>'+
+      '<text x="'+(W-pad)+'" y="'+(H-4)+'" style="fill:var(--muted)" font-size="9" text-anchor="end">'+monDMY(pts[n-1].d)+'</text></svg>';
+    return svg+'<div class="row between" style="margin-top:6px"><span class="sub">menor '+brlM(mn)+' · maior '+brlM(mx)+'</span><span class="sub">hoje <b style="color:var(--ink)">'+brlM(last)+'</b></span></div>';
+  }
   /* ================= RESTAURANTES ================= */
   function renderRestaurantes(){
     var arr=VIA.get('restaurantes',[]);
@@ -1046,6 +1069,7 @@
       cq=await sb.from('viagem_orcamento').select('*').eq('id',1).maybeSingle();
     }catch(e){el.innerHTML=head+'<div class="card"><div class="sub">Não consegui ler o monitor agora.</div></div>';return;}
     if(vq.error){el.innerHTML=head+'<div class="card"><div class="sub">Não consegui ler o monitor: '+esc(vq.error.message)+'</div></div>';return;}
+    var hist=[];try{var hq=await sb.from('viagem_historico').select('dia,voo_brl,total_brl').order('dia');if(hq&&!hq.error)hist=hq.data||[];}catch(e){}
     var voos=vq.data||[], cfg=(cq&&cq.data)||{hotel_noite:220,hotel_noites:12,fx_eur_brl:5.9,alvo_pp:4000};
     if(!voos.length){el.innerHTML=head+'<div class="card"><div class="sub">Sem dados do monitor ainda — toque em "Atualizar agora".</div></div>';return;}
     var melhor=voos.filter(function(x){return cfg.hotel_janela_slug&&x.slug===cfg.hotel_janela_slug;})[0]
@@ -1100,8 +1124,13 @@
       }).join('');
       compCard='<div class="card"><h2 style="font-size:1rem">🗓️ Abril ou Maio?</h2><div class="sub" style="margin:4px 0 6px">Total voo + hotel por janela · ★ = melhor combinação.</div>'+linhas+'</div>';
     }
+    var chartCard='<div class="card"><h2 style="font-size:1rem">📈 Histórico diário</h2>'+
+      '<div class="scroller" style="margin:10px 0 8px;gap:8px">'+
+        '<span class="pill'+(monChartView==='total'?' on':'')+'" onclick="VUI.monChart(\'total\')">Voo + hotel</span>'+
+        '<span class="pill'+(monChartView==='voo'?' on':'')+'" onclick="VUI.monChart(\'voo\')">Só voo</span>'+
+      '</div>'+monChartSVG(hist,monChartView)+'</div>';
     var upd=melhor.atualizado_em?('<div class="sub" style="text-align:center;margin-top:14px">atualizado em '+fmtUpd(melhor.atualizado_em)+'</div>'):'';
-    el.innerHTML=head+compCard+janelas+hotel+totCard+pp+upd;
+    el.innerHTML=head+compCard+janelas+hotel+totCard+chartCard+pp+upd;
   }
 
   /* ================= ROUTER ================= */
@@ -1259,6 +1288,7 @@
       toast(ok?'Preços atualizados ✓':'Busca disparada — atualizando…');
       monitorRender('monWrap');
     },
+    monChart:function(v){monChartView=v;monitorRender('monWrap');},
     monTeto:async function(btn){
       var el=document.getElementById('hotTeto');
       var v=el?parseFloat((el.value||'').replace(',','.')):NaN;
