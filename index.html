@@ -919,6 +919,7 @@
 
   /* ================= MONITORAMENTO (voos + orçamento; read-only) ================= */
   var MON_FN='https://jlouesrrmqeauzlgvrpw.supabase.co/functions/v1/flight-monitor';
+  var HOTEL_FN='https://jlouesrrmqeauzlgvrpw.supabase.co/functions/v1/hotel-monitor';
   function brlM(n){return 'R$ '+Math.round(+n||0).toLocaleString('pt-BR');}
   function eurM(n){return '€ '+Math.round(+n||0).toLocaleString('pt-BR');}
   function fmtUpd(ts){try{var d=new Date(ts);if(isNaN(d))return esc(String(ts));return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return esc(String(ts));}}
@@ -1060,10 +1061,18 @@
         '<div class="kpi"><div class="k"><div class="l">Total (3 pax)</div><div class="v">'+brlM(x.preco_total)+'</div></div>'+
           '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div></div>';
     }).join('');
-    var hotel='<div class="card"><div class="row between"><h2 style="font-size:1rem">🏨 Hotel</h2><span class="chip">'+(+cfg.hotel_noites)+' noites</span></div>'+
-      '<div class="sub" style="margin:4px 0 10px">Casal (Diego + Débora) · '+eurM(cfg.hotel_noite)+'/noite · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
+    var hLive=cfg.hotel_fonte==='serpapi';
+    var hNome=cfg.hotel_nome?esc(cfg.hotel_nome):null;
+    var hRat=(cfg.hotel_rating!=null&&cfg.hotel_rating!=='')?(' · ⭐ '+(+cfg.hotel_rating).toFixed(1).replace('.',',')):'';
+    var hLink=cfg.hotel_link||'';
+    var hotel='<div class="card"><div class="row between"><h2 style="font-size:1rem">🏨 Hotel</h2>'+
+      (hLive?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
+      (hNome?'<div class="sub" style="margin:6px 0 2px"><b style="color:var(--ink)">'+hNome+'</b>'+hRat+' · 4★ centro de Paris</div>':'')+
+      '<div class="sub" style="margin:2px 0 10px">Casal (Diego + Débora) · '+eurM(cfg.hotel_noite)+'/noite × '+(+cfg.hotel_noites)+' noites · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
       '<div class="kpi"><div class="k"><div class="l">Total em euros</div><div class="v">'+eurM(hEUR)+'</div></div>'+
-        '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div></div>';
+        '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div>'+
+      (hLink?'<a class="btn soft" style="margin-top:10px;display:block;text-align:center;text-decoration:none" href="'+esc(hLink)+'" target="_blank" rel="noopener">🔗 Ver o hotel</a>':'')+
+      '</div>';
     var alvoChip=acima?'<span class="chip status-chip st-warn">acima do alvo</span>':'<span class="chip status-chip st-conf">dentro do alvo</span>';
     var totCard='<div class="card mon-total"><div class="gtot"><div class="v">'+brlM(tot)+'</div><div class="of">total geral estimado · voo mais barato + hotel</div></div>'+
       '<div class="row between" style="margin-top:12px"><span class="sub">Menor por pessoa (voo): <b style="color:var(--ink)">'+brlM(menorPP)+'</b></span>'+alvoChip+'</div>'+
@@ -1222,7 +1231,13 @@
     monRefresh:async function(btn){
       if(btn){btn.disabled=true;btn.textContent='buscando…';}
       var ok=false;
-      try{var r=await fetch(MON_FN,{method:'POST'});ok=r&&r.ok;}catch(e){}
+      try{
+        var res=await Promise.all([
+          fetch(MON_FN,{method:'POST'}).catch(function(){return null;}),
+          fetch(HOTEL_FN,{method:'POST'}).catch(function(){return null;})
+        ]);
+        ok=res.some(function(r){return r&&r.ok;});
+      }catch(e){}
       if(btn){btn.disabled=false;btn.textContent='🔄 Atualizar agora';}
       toast(ok?'Preços atualizados ✓':'Busca disparada — atualizando…');
       monitorRender('monWrap');
