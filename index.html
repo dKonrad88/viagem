@@ -109,6 +109,8 @@
   .voo-times span{color:var(--muted);margin:0 5px;font-weight:400}
   .voo-times small{color:var(--muted);font-size:.7rem}
   .voo-meta{font-size:.74rem;color:var(--muted);margin-top:2px}
+  .voo-loc{font-size:.76rem;color:var(--primary2);margin-top:4px;cursor:pointer;display:inline-block}
+  .voo-loc b{letter-spacing:.06em;font-size:.82rem;color:var(--ink)}
   .res-item{border-top:1px solid var(--line);padding:9px 0}
   .res-item:first-of-type{border-top:0}
   .res-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -498,9 +500,10 @@
   function vooLeg(f){
     var rota=esc(f.de||'')+(f.dep?' ('+esc(f.dep)+')':'')+' → '+esc(f.para||'')+(f.arr?' ('+esc(f.arr)+')':'')+(f.data?' · '+esc(f.data):'');
     var meta=[f.voo,f.aviao].filter(Boolean).map(esc).join(' · ');
+    var loc=f.loc?'<div class="voo-loc" onclick="VUI.copyLoc(\''+esc(f.loc)+'\')">🎫 Localizador Latam: <b>'+esc(f.loc)+'</b></div>':'';
     return '<div class="voo"><div class="voo-rota">'+rota+'</div>'+
       '<div class="voo-times">'+esc(f.saida||'')+' <span>→</span> '+esc(f.chegada||'')+(f.dur?' <small>('+esc(f.dur)+')</small>':'')+'</div>'+
-      (meta?'<div class="voo-meta">'+meta+'</div>':'')+'</div>';}
+      (meta?'<div class="voo-meta">'+meta+'</div>':'')+loc+'</div>';}
   function voosCard(){
     var v=dVoos();if(!v)return '';
     var ida=(v.ida||[]).map(vooLeg).join(''), volta=(v.volta||[]).map(vooLeg).join('');
@@ -1156,6 +1159,7 @@
     resSave:function(i){var label=($('#rsLabel').value||'').trim(), valor=($('#rsVal').value||'').trim();if(!label){toast('Dê um título.');return;}var rs=dReservas();if(i>=0&&rs[i]){rs[i]={label:label,valor:valor};}else{rs.push({label:label,valor:valor});}VIA.set('reservas',rs);closeSheet();render();toast('Salvo ✓');},
     resDel:function(i){var rs=dReservas();rs.splice(i,1);VIA.set('reservas',rs);render();},
     resCopy:function(i){var rs=dReservas(),it=rs[i];if(!it||!it.valor)return;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(it.valor);toast('Copiado: '+it.label);}else{toast(it.valor);}}catch(e){toast(it.valor);}},
+    copyLoc:function(code){if(!code)return;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code);toast('Localizador copiado: '+code);}else{toast(code);}}catch(e){toast(code);}},
     diaForm:diaForm,
     diaSave:function(i){var rt=dRoteiro().slice();var tit=($('#dyTit').value||'').trim();var data=($('#dyData').value||'').trim();var g=parseFloat(($('#dyGasto').value||'').replace(',','.'));if(!tit&&!data){toast('Preencha ao menos o título.');return;}
       if(i>=0&&rt[i]){rt[i]=Object.assign({},rt[i],{titulo:tit,data:data,gasto:isNaN(g)?rt[i].gasto:g});}
