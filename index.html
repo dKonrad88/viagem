@@ -1062,7 +1062,7 @@
     var el=document.getElementById(elId);if(!el)return;
     var head='<div class="card"><div class="row between"><h2>📡 Monitoramento</h2>'+
       '<button class="btn soft mon-refresh" onclick="VUI.monRefresh(this)">🔄 Atualizar agora</button></div>'+
-      '<div class="sub" style="margin-top:6px">Voo (POA→Paris, 3 pax) + hotel 4★ · datas flexíveis em Abril/Maio · busca diária ao vivo.</div></div>';
+      '<div class="sub" style="margin-top:6px">Voo (POA→Paris, 3 pax) + hotel central · datas flexíveis em Abril/Maio · busca diária ao vivo.</div></div>';
     var vq,cq;
     try{
       vq=await sb.from('viagem_monitor').select('*').order('checkin');
@@ -1087,6 +1087,8 @@
           '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div></div>';
     }).join('');
     var teto=(cfg.hotel_teto!=null&&cfg.hotel_teto!=='')?Math.round(+cfg.hotel_teto):250;
+    var hEst=(cfg.hotel_estrelas!=null&&cfg.hotel_estrelas!=='')?Math.round(+cfg.hotel_estrelas):4;
+    var estMin=(cfg.hotel_estrelas_min!=null&&cfg.hotel_estrelas_min!=='')?Math.round(+cfg.hotel_estrelas_min):4;
     var hLive=cfg.hotel_fonte==='serpapi';
     var hNome=cfg.hotel_nome?esc(cfg.hotel_nome):null;
     var hRat=(cfg.hotel_rating!=null&&cfg.hotel_rating!=='')?(' · ⭐ '+(+cfg.hotel_rating).toFixed(1).replace('.',',')):'';
@@ -1094,14 +1096,18 @@
     var hTeto=hLive?(cfg.hotel_over_teto?'<span class="chip status-chip st-warn">acima de €'+teto+'</span>':'<span class="chip status-chip st-conf">≤ €'+teto+'</span>'):'';
     var hotel='<div class="card"><div class="row between"><h2 style="font-size:1rem">🏨 Hotel</h2>'+
       (hLive?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
-      (hNome?'<div class="row between" style="margin:6px 0 2px"><div class="sub"><b style="color:var(--ink)">'+hNome+'</b>'+hRat+' · 4★ centro</div>'+hTeto+'</div>':'')+
+      (hNome?'<div class="row between" style="margin:6px 0 2px"><div class="sub"><b style="color:var(--ink)">'+hNome+'</b>'+hRat+' · '+hEst+'★ centro</div>'+hTeto+'</div>':'')+
       '<div class="sub" style="margin:2px 0 10px">Casal (Diego + Débora) · nas datas de '+esc(melhor.titulo||'')+' · '+eurM(cfg.hotel_noite)+'/noite × '+(+cfg.hotel_noites)+' noites · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
       '<div class="kpi"><div class="k"><div class="l">Total em euros</div><div class="v">'+eurM(hEUR)+'</div></div>'+
         '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div>'+
       (hLink?'<a class="btn soft" style="margin-top:10px;display:block;text-align:center;text-decoration:none" href="'+esc(hLink)+'" target="_blank" rel="noopener">🔗 Ver o hotel</a>':'')+
-      '<div class="row" style="margin-top:12px;gap:8px;align-items:flex-end"><div style="flex:1"><label class="lbl">Teto do hotel (€/noite)</label><input class="f" id="hotTeto" type="number" inputmode="decimal" min="20" max="2000" value="'+teto+'" style="margin:0"></div>'+
+      '<label class="lbl" style="margin-top:12px">Padrão mínimo</label>'+
+      '<div class="scroller" id="estWrap" style="gap:8px;margin-bottom:4px">'+
+        '<span class="pill'+(estMin>=4?' on':'')+'" data-est="4" onclick="VUI.monPill(this)">4★</span>'+
+        '<span class="pill'+(estMin<=3?' on':'')+'" data-est="3" onclick="VUI.monPill(this)">3★ ou 4★</span></div>'+
+      '<div class="row" style="margin-top:8px;gap:8px;align-items:flex-end"><div style="flex:1"><label class="lbl">Teto do hotel (€/noite)</label><input class="f" id="hotTeto" type="number" inputmode="decimal" min="20" max="2000" value="'+teto+'" style="margin:0"></div>'+
         '<button class="btn soft" style="width:auto;margin:0;white-space:nowrap;padding:12px 14px" onclick="VUI.monTeto(this)">🔎 Testar</button></div>'+
-      '<div class="sub" style="margin-top:6px">Muda o teto e busca de novo — vê como fica o melhor combo com outro limite.</div>'+
+      '<div class="sub" style="margin-top:6px">Escolhe o padrão e o teto, toca em Testar — vê como fica o melhor combo. €150 já é faixa de 3★.</div>'+
       '</div>';
     var alvoChip=acima?'<span class="chip status-chip st-warn">acima do alvo</span>':'<span class="chip status-chip st-conf">dentro do alvo</span>';
     var totCard='<div class="card mon-total"><div class="gtot"><div class="v">'+brlM(tot)+'</div><div class="of">melhor combo · '+esc(melhor.titulo||'')+' (voo + hotel)</div></div>'+
@@ -1118,7 +1124,7 @@
       var comWin=combos.filter(function(c){return c.total!=null;}).sort(function(a,b){return a.total-b.total;})[0];
       var linhas=combos.map(function(c){
         var win=comWin&&c.slug===comWin.slug;
-        var det='voo '+brlM(c.voo)+(c.hotel_noite?(' + €'+c.hotel_noite+'/n'):'');
+        var det='voo '+brlM(c.voo)+(c.hotel_noite?(' + €'+c.hotel_noite+'/n'+(c.hotel_estrelas?' '+Math.round(c.hotel_estrelas)+'★':'')):'');
         var badge=c.over_teto?' <span class="chip status-chip st-warn" style="font-size:.6rem;padding:1px 6px">hotel &gt;€'+teto+'</span>':'';
         return '<div class="row between mon-pp"><div><b style="color:var(--ink)">'+esc(c.titulo||'')+'</b>'+(win?' <span style="color:var(--ok)">★</span>':'')+'<div class="sub">'+det+badge+'</div></div><div style="font-weight:700'+(win?';color:var(--ok)':'')+'">'+(c.total!=null?brlM(c.total):'—')+'</div></div>';
       }).join('');
@@ -1289,20 +1295,23 @@
       monitorRender('monWrap');
     },
     monChart:function(v){monChartView=v;monitorRender('monWrap');},
+    monPill:function(el){var w=el.parentNode;[].forEach.call(w.querySelectorAll('.pill'),function(p){p.classList.remove('on');});el.classList.add('on');},
     monTeto:async function(btn){
       var el=document.getElementById('hotTeto');
       var v=el?parseFloat((el.value||'').replace(',','.')):NaN;
       if(!v||v<20){toast('Informe um teto em euros (ex.: 250).');return;}
       v=Math.round(Math.min(2000,v));
+      var pe=document.querySelector('#estWrap .pill.on');
+      var est=pe?parseInt(pe.getAttribute('data-est'),10):4;
       if(btn){btn.disabled=true;btn.textContent='salvando…';}
       try{
-        var s=await sb.rpc('set_hotel_teto',{p_teto:v});
-        if(s&&s.error){toast('Falha ao salvar teto: '+s.error.message);if(btn){btn.disabled=false;btn.textContent='🔎 Testar';}return;}
+        var s=await sb.rpc('set_hotel_filtros',{p_teto:v,p_estrelas:est});
+        if(s&&s.error){toast('Falha ao salvar: '+s.error.message);if(btn){btn.disabled=false;btn.textContent='🔎 Testar';}return;}
         if(btn)btn.textContent='buscando hotel…';
         await fetch(HOTEL_FN,{method:'POST'}).catch(function(){return null;});
       }catch(e){}
       if(btn){btn.disabled=false;btn.textContent='🔎 Testar';}
-      toast('Buscando com teto € '+v+'…');
+      toast('Buscando '+(est<=3?'3★ ou 4★':'4★')+' até € '+v+'…');
       monitorRender('monWrap');
     },
     fab:function(){if(!espacoId){novaViagemForm();return;}var f=SEC_FAB[view];if(f)f();}
