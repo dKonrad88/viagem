@@ -295,6 +295,7 @@
   var sb=null, user=null, espacoId=null, espacoNome='Viagem', dados={}, espacos=[];
   var $=function(s){return document.querySelector(s);};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function cidade(n){var c=String(n==null?'':n).replace(/^\s*viagem\s+/i,'').trim();return c||String(n||'Viagem');}
   var toastT=null;
   function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2000);}
 
@@ -1063,7 +1064,7 @@
     var lista;
     if(espacos.length){
       lista='<div class="trips">'+espacos.map(function(e){
-        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-nm">'+esc(e.nome||'Viagem')+'</span>'+statusChip(e.status)+'<span class="trip-go">›</span></button>';
+        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-nm">'+esc(cidade(e.nome))+'</span>'+statusChip(e.status)+'<span class="trip-go">›</span></button>';
       }).join('')+'</div>';
     } else lista='<div class="empty">Você ainda não tem viagens.<br>Toque no + para criar a primeira.</div>';
     return lista+
@@ -1103,7 +1104,7 @@
     }
     if(view==='home'){
       if(back)back.style.display='flex';if(hdr)hdr.classList.add('withback');
-      $('#hsub').textContent=espacoNome;
+      $('#hsub').textContent=cidade(espacoNome);
       var secs=SECOES.slice();
       if(dMeta().status==='Monitoramento')secs.splice(1,0,['📡','Monitoramento','voos & orçamento ao vivo','monitor']);
       var tiles=secs.map(function(s){return '<div class="tile" onclick="VUI.go(\''+s[3]+'\')"><div class="ic">'+s[0]+'</div><div class="t">'+esc(s[1])+'</div><div class="s">'+esc(s[2])+'</div></div>';}).join('');
