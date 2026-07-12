@@ -228,6 +228,19 @@
   .vtbl th .mv{border:none;background:transparent;color:var(--primary2);cursor:pointer;font-size:.85rem;padding:5px 5px;font-family:inherit;line-height:1;border-radius:6px}
   .vtbl th .mv:active{background:var(--primary2);color:#fff}
   .vtbl th{padding:2px 4px}
+  .rwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .rtbl{width:100%;border-collapse:collapse;font-size:.87rem}
+  .rtbl td{padding:8px 8px;border-top:1px solid var(--line);vertical-align:top}
+  .rtbl tr:first-child td{border-top:none}
+  .rtbl tr.rnd td{border-top:2px solid var(--primary2)}
+  .rcd{font-weight:700;color:var(--primary2);text-align:center;width:22px}
+  .rcr{width:16px;text-align:center;font-size:1rem}
+  .rcn{font-weight:600;line-height:1.25}
+  .rct{color:var(--muted);font-size:.73rem;font-weight:400;margin-top:2px}
+  .rcl{white-space:nowrap;text-align:right;width:1%}
+  .rl{text-decoration:none;font-size:1.05rem;padding:3px 3px;display:inline-block}
+  .rna{color:var(--muted);opacity:.5}
+  .rtag{display:inline-block;font-size:.58rem;font-weight:700;color:var(--ok);border:1px solid var(--ok);padding:0 5px;border-radius:5px;text-transform:uppercase;letter-spacing:.03em;vertical-align:middle}
   .mapctl{margin-bottom:10px}
   .mapsel{margin-bottom:8px}
   .mchips{display:flex;flex-wrap:wrap;gap:6px}
@@ -422,7 +435,7 @@
 
   /* ================= TELAS DA VIAGEM ================= */
   var view='home', focoState={diaIdx:0,stopIdx:0};
-  var SECOES=[['🏠','Início','resumo da viagem','inicio'],['🗺️','Roteiro','o dia a dia','roteiro'],['📍','Mapa','tudo no mapa','mapa'],['🧳','Checklist','malas e compras','checklist'],['💸','Gastos','orçamento','gastos'],['📄','Documentos','passagens, reservas','documentos']];
+  var SECOES=[['🏠','Início','resumo da viagem','inicio'],['🗺️','Roteiro','o dia a dia','roteiro'],['📍','Mapa','tudo no mapa','mapa'],['🍴','Restaurantes','comer & cafés','restaurantes'],['🧳','Checklist','malas e compras','checklist'],['💸','Gastos','orçamento','gastos'],['📄','Documentos','passagens, reservas','documentos']];
   var STATUS_LIST=['Planejando','Monitoramento','Confirmada','Concluída'];
   var STATUS_META={'Planejando':{ic:'📝',cls:'st-plan'},'Monitoramento':{ic:'📡',cls:'st-mon'},'Confirmada':{ic:'✅',cls:'st-conf'},'Concluída':{ic:'🏁',cls:'st-done'}};
   function statusChip(s){var m=STATUS_META[s];if(!m)return '';return '<span class="chip status-chip '+m.cls+'">'+m.ic+' '+esc(s)+'</span>';}
@@ -861,6 +874,27 @@
   function eurM(n){return '€ '+Math.round(+n||0).toLocaleString('pt-BR');}
   function fmtUpd(ts){try{var d=new Date(ts);if(isNaN(d))return esc(String(ts));return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return esc(String(ts));}}
   function monPP(nome,desc,val){return '<div class="row between mon-pp"><div><b>'+esc(nome)+'</b> <span class="sub">· '+esc(desc)+'</span></div><div style="font-weight:700">'+brlM(val)+'</div></div>';}
+  /* ================= RESTAURANTES ================= */
+  function renderRestaurantes(){
+    var arr=VIA.get('restaurantes',[]);
+    if(!Array.isArray(arr)||!arr.length) return '<div class="card"><h2 style="font-size:1rem">🍴 Restaurantes</h2><div class="sub" style="margin-top:6px">Esta viagem ainda não tem a lista de restaurantes.</div></div>';
+    var RIC={'Café':'☕','Almoço':'🍴','Jantar':'🍷'};
+    var head='<div class="card"><div class="row between"><h2 style="font-size:1rem">🍴 Restaurantes</h2>'+
+      '<a class="btn soft" style="text-decoration:none;padding:6px 10px;font-size:.78rem" href="https://dkonrad88.github.io/viagem/cafes.html" target="_blank" rel="noopener">↗ versão web</a></div>'+
+      '<div class="sub" style="margin-top:6px">Almoços, jantares e cafés por dia. Toque: 📷 Instagram · 🌐 site · 🗺️ Maps. <span class="rtag">novo</span> = fora da lista antiga.</div></div>';
+    var body=arr.map(function(x,i){
+      var nd=(i===0||arr[i-1].d!==x.d), lk=[];
+      if(x.ig) lk.push('<a class="rl" href="'+esc(x.ig)+'" target="_blank" rel="noopener" aria-label="Instagram">📷</a>');
+      if(x.w)  lk.push('<a class="rl" href="'+esc(x.w)+'" target="_blank" rel="noopener" aria-label="Site">🌐</a>');
+      if(x.e)  lk.push('<a class="rl" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(x.n+', '+x.e)+'" target="_blank" rel="noopener" aria-label="Google Maps">🗺️</a>');
+      var links=lk.length?lk.join(''):'<span class="rna">—</span>';
+      return '<tr'+(nd?' class="rnd"':'')+'><td class="rcd">'+(nd?x.d:'')+'</td><td class="rcr">'+(RIC[x.r]||'')+'</td>'+
+        '<td class="rcn">'+esc(x.n)+(x.nv?' <span class="rtag">novo</span>':'')+'<div class="rct">'+esc(x.t)+'</div></td>'+
+        '<td class="rcl">'+links+'</td></tr>';
+    }).join('');
+    return head+'<div class="card" style="padding:0;overflow:hidden"><div class="rwrap"><table class="rtbl"><tbody>'+body+'</tbody></table></div></div>';
+  }
+
   /* ================= MAPA (Leaflet lazy) ================= */
   var MCAT={rest:{e:'🍴',c:'#d2533f',n:'Comer'},shop:{e:'🛍️',c:'#8b5cf6',n:'Compras'},merc:{e:'🛒',c:'#1f9d63',n:'Mercado'},park:{e:'🎢',c:'#185FA5',n:'Parque'},tour:{e:'🎡',c:'#e08a1e',n:'Passeio'},base:{e:'🏠',c:'#64748b',n:'Base'}};
   function ensureLeaflet(){
@@ -1016,7 +1050,7 @@
       '<label class="lbl">Data de início (opcional)</label><input class="f" id="nvData" type="date">'+
       '<button class="btn" onclick="VUI.novaViagemSave()">Criar viagem</button>');
   }
-  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',mapa:'📍 Mapa',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos',monitor:'📡 Monitoramento'};
+  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',mapa:'📍 Mapa',restaurantes:'🍴 Restaurantes',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos',monitor:'📡 Monitoramento'};
   var SEC_FAB={gastos:gastoForm,documentos:docForm,roteiro:function(){diaForm();},checklist:function(){secForm();}};
   function render(){
     var app=$('#app');
@@ -1053,6 +1087,7 @@
     if(view==='inicio')html=renderInicio();
     else if(view==='roteiro')html=renderRoteiro();
     else if(view==='mapa')html=renderMapa();
+    else if(view==='restaurantes')html=renderRestaurantes();
     else if(view==='checklist')html=renderChecklist();
     else if(view==='gastos')html=renderGastos();
     else if(view==='documentos')html=renderDocumentos();
