@@ -111,6 +111,7 @@
   .voo-meta{font-size:.74rem;color:var(--muted);margin-top:2px}
   .voo-loc{font-size:.76rem;color:var(--primary2);margin-top:4px;cursor:pointer;display:inline-block}
   .voo-loc b{letter-spacing:.06em;font-size:.82rem;color:var(--ink)}
+  .voo-ast{font-size:.76rem;color:var(--muted);margin-top:3px}
   .res-item{border-top:1px solid var(--line);padding:9px 0}
   .res-item:first-of-type{border-top:0}
   .res-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -501,9 +502,10 @@
     var rota=esc(f.de||'')+(f.dep?' ('+esc(f.dep)+')':'')+' → '+esc(f.para||'')+(f.arr?' ('+esc(f.arr)+')':'')+(f.data?' · '+esc(f.data):'');
     var meta=[f.voo,f.aviao].filter(Boolean).map(esc).join(' · ');
     var loc=f.loc?'<div class="voo-loc" onclick="VUI.copyLoc(\''+esc(f.loc)+'\')">🎫 Localizador Latam: <b>'+esc(f.loc)+'</b></div>':'';
+    var ast=f.assentos?'<div class="voo-ast">💺 '+esc(f.assentos)+'</div>':'';
     return '<div class="voo"><div class="voo-rota">'+rota+'</div>'+
       '<div class="voo-times">'+esc(f.saida||'')+' <span>→</span> '+esc(f.chegada||'')+(f.dur?' <small>('+esc(f.dur)+')</small>':'')+'</div>'+
-      (meta?'<div class="voo-meta">'+meta+'</div>':'')+loc+'</div>';}
+      (meta?'<div class="voo-meta">'+meta+'</div>':'')+loc+ast+'</div>';}
   function voosCard(){
     var v=dVoos();if(!v)return '';
     var ida=(v.ida||[]).map(vooLeg).join(''), volta=(v.volta||[]).map(vooLeg).join('');
