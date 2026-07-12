@@ -1039,7 +1039,7 @@
     var el=document.getElementById(elId);if(!el)return;
     var head='<div class="card"><div class="row between"><h2>📡 Monitoramento</h2>'+
       '<button class="btn soft mon-refresh" onclick="VUI.monRefresh(this)">🔄 Atualizar agora</button></div>'+
-      '<div class="sub" style="margin-top:6px">Voos POA → Paris · 3 passageiros · busca automática diária.</div></div>';
+      '<div class="sub" style="margin-top:6px">Voo (POA→Paris, 3 pax) + hotel 4★ · datas flexíveis em Abril/Maio · busca diária ao vivo.</div></div>';
     var vq,cq;
     try{
       vq=await sb.from('viagem_monitor').select('*').order('checkin');
@@ -1048,7 +1048,8 @@
     if(vq.error){el.innerHTML=head+'<div class="card"><div class="sub">Não consegui ler o monitor: '+esc(vq.error.message)+'</div></div>';return;}
     var voos=vq.data||[], cfg=(cq&&cq.data)||{hotel_noite:220,hotel_noites:12,fx_eur_brl:5.9,alvo_pp:4000};
     if(!voos.length){el.innerHTML=head+'<div class="card"><div class="sub">Sem dados do monitor ainda — toque em "Atualizar agora".</div></div>';return;}
-    var melhor=voos.slice().sort(function(a,b){return (+a.preco_total||1e12)-(+b.preco_total||1e12);})[0];
+    var melhor=voos.filter(function(x){return cfg.hotel_janela_slug&&x.slug===cfg.hotel_janela_slug;})[0]
+      ||voos.slice().sort(function(a,b){return (+a.preco_total||1e12)-(+b.preco_total||1e12);})[0];
     var hEUR=(+cfg.hotel_noite)*(+cfg.hotel_noites), hBRL=hEUR*(+cfg.fx_eur_brl), mh=hBRL/2;
     var menorPP=+melhor.preco_por_pessoa, tot=(+melhor.preco_total)+hBRL;
     var acima=menorPP>(+cfg.alvo_pp);
@@ -1057,7 +1058,7 @@
       return '<div class="card mon-win'+(best?' mon-best':'')+'">'+
         '<div class="row between"><h2 style="font-size:1rem">✈️ '+esc(x.titulo||'')+'</h2>'+
           (live?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
-        '<div class="sub" style="margin:4px 0 10px">'+esc(x.origem||'')+' → '+esc(x.destino||'')+' · '+esc(x.cia||'')+(best?' · <b style="color:var(--ok)">mais barato</b>':'')+'</div>'+
+        '<div class="sub" style="margin:4px 0 10px">'+esc(x.origem||'')+' → '+esc(x.destino||'')+' · '+esc(x.cia||'')+(best?' · <b style="color:var(--ok)">★ melhor combo</b>':'')+'</div>'+
         '<div class="kpi"><div class="k"><div class="l">Total (3 pax)</div><div class="v">'+brlM(x.preco_total)+'</div></div>'+
           '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div></div>';
     }).join('');
@@ -1065,16 +1066,17 @@
     var hNome=cfg.hotel_nome?esc(cfg.hotel_nome):null;
     var hRat=(cfg.hotel_rating!=null&&cfg.hotel_rating!=='')?(' · ⭐ '+(+cfg.hotel_rating).toFixed(1).replace('.',',')):'';
     var hLink=cfg.hotel_link||'';
+    var hTeto=hLive?(cfg.hotel_over_teto?'<span class="chip status-chip st-warn">acima de €250</span>':'<span class="chip status-chip st-conf">≤ €250</span>'):'';
     var hotel='<div class="card"><div class="row between"><h2 style="font-size:1rem">🏨 Hotel</h2>'+
       (hLive?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
-      (hNome?'<div class="sub" style="margin:6px 0 2px"><b style="color:var(--ink)">'+hNome+'</b>'+hRat+' · 4★ centro de Paris</div>':'')+
-      '<div class="sub" style="margin:2px 0 10px">Casal (Diego + Débora) · '+eurM(cfg.hotel_noite)+'/noite × '+(+cfg.hotel_noites)+' noites · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
+      (hNome?'<div class="row between" style="margin:6px 0 2px"><div class="sub"><b style="color:var(--ink)">'+hNome+'</b>'+hRat+' · 4★ centro</div>'+hTeto+'</div>':'')+
+      '<div class="sub" style="margin:2px 0 10px">Casal (Diego + Débora) · nas datas de '+esc(melhor.titulo||'')+' · '+eurM(cfg.hotel_noite)+'/noite × '+(+cfg.hotel_noites)+' noites · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
       '<div class="kpi"><div class="k"><div class="l">Total em euros</div><div class="v">'+eurM(hEUR)+'</div></div>'+
         '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div>'+
       (hLink?'<a class="btn soft" style="margin-top:10px;display:block;text-align:center;text-decoration:none" href="'+esc(hLink)+'" target="_blank" rel="noopener">🔗 Ver o hotel</a>':'')+
       '</div>';
     var alvoChip=acima?'<span class="chip status-chip st-warn">acima do alvo</span>':'<span class="chip status-chip st-conf">dentro do alvo</span>';
-    var totCard='<div class="card mon-total"><div class="gtot"><div class="v">'+brlM(tot)+'</div><div class="of">total geral estimado · voo mais barato + hotel</div></div>'+
+    var totCard='<div class="card mon-total"><div class="gtot"><div class="v">'+brlM(tot)+'</div><div class="of">melhor combo · '+esc(melhor.titulo||'')+' (voo + hotel)</div></div>'+
       '<div class="row between" style="margin-top:12px"><span class="sub">Menor por pessoa (voo): <b style="color:var(--ink)">'+brlM(menorPP)+'</b></span>'+alvoChip+'</div>'+
       '<div class="sub" style="margin-top:4px">Alvo por pessoa: '+brlM(cfg.alvo_pp)+'</div></div>';
     var pp='<div class="card"><h2 style="font-size:1rem">👥 Por pessoa</h2>'+
@@ -1082,8 +1084,20 @@
       monPP('Diego','voo + ½ hotel',menorPP+mh)+
       monPP('Débora','voo + ½ hotel',menorPP+mh)+
       monPP('Fotógrafo','só o voo',menorPP)+'</div>';
+    var combos=Array.isArray(cfg.hotel_combos)?cfg.hotel_combos:[];
+    var compCard='';
+    if(combos.length>1){
+      var comWin=combos.filter(function(c){return c.total!=null;}).sort(function(a,b){return a.total-b.total;})[0];
+      var linhas=combos.map(function(c){
+        var win=comWin&&c.slug===comWin.slug;
+        var det='voo '+brlM(c.voo)+(c.hotel_noite?(' + €'+c.hotel_noite+'/n'):'');
+        var badge=c.over_teto?' <span class="chip status-chip st-warn" style="font-size:.6rem;padding:1px 6px">hotel &gt;€250</span>':'';
+        return '<div class="row between mon-pp"><div><b style="color:var(--ink)">'+esc(c.titulo||'')+'</b>'+(win?' <span style="color:var(--ok)">★</span>':'')+'<div class="sub">'+det+badge+'</div></div><div style="font-weight:700'+(win?';color:var(--ok)':'')+'">'+(c.total!=null?brlM(c.total):'—')+'</div></div>';
+      }).join('');
+      compCard='<div class="card"><h2 style="font-size:1rem">🗓️ Abril ou Maio?</h2><div class="sub" style="margin:4px 0 6px">Total voo + hotel por janela · ★ = melhor combinação.</div>'+linhas+'</div>';
+    }
     var upd=melhor.atualizado_em?('<div class="sub" style="text-align:center;margin-top:14px">atualizado em '+fmtUpd(melhor.atualizado_em)+'</div>'):'';
-    el.innerHTML=head+janelas+hotel+totCard+pp+upd;
+    el.innerHTML=head+compCard+janelas+hotel+totCard+pp+upd;
   }
 
   /* ================= ROUTER ================= */
@@ -1229,14 +1243,13 @@
     docDel:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];var ds=dDocs().filter(function(x){return x.id!==id;});VIA.set('documentos',ds);render();if(d&&d.arquivo&&d.arquivo.path&&sb){try{await sb.storage.from(DOC_BUCKET).remove([d.arquivo.path]);}catch(e){}}},
     joinForm:joinForm,
     monRefresh:async function(btn){
-      if(btn){btn.disabled=true;btn.textContent='buscando…';}
+      if(btn){btn.disabled=true;btn.textContent='buscando voos…';}
       var ok=false;
       try{
-        var res=await Promise.all([
-          fetch(MON_FN,{method:'POST'}).catch(function(){return null;}),
-          fetch(HOTEL_FN,{method:'POST'}).catch(function(){return null;})
-        ]);
-        ok=res.some(function(r){return r&&r.ok;});
+        var rv=await fetch(MON_FN,{method:'POST'}).catch(function(){return null;});
+        if(btn)btn.textContent='buscando hotel…';
+        var rh=await fetch(HOTEL_FN,{method:'POST'}).catch(function(){return null;});
+        ok=(rv&&rv.ok)||(rh&&rh.ok);
       }catch(e){}
       if(btn){btn.disabled=false;btn.textContent='🔄 Atualizar agora';}
       toast(ok?'Preços atualizados ✓':'Busca disparada — atualizando…');
