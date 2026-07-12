@@ -924,6 +924,7 @@
   function eurM(n){return '€ '+Math.round(+n||0).toLocaleString('pt-BR');}
   function fmtUpd(ts){try{var d=new Date(ts);if(isNaN(d))return esc(String(ts));return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return esc(String(ts));}}
   function monPP(nome,desc,val){return '<div class="row between mon-pp"><div><b>'+esc(nome)+'</b> <span class="sub">· '+esc(desc)+'</span></div><div style="font-weight:700">'+brlM(val)+'</div></div>';}
+  function bookingUrl(nome,ci,co){if(!nome||!ci||!co)return '';return 'https://www.booking.com/searchresults.html?ss='+encodeURIComponent(nome+', Paris')+'&checkin='+encodeURIComponent(ci)+'&checkout='+encodeURIComponent(co)+'&group_adults=2&no_rooms=1&group_children=0';}
   var monChartView='total';
   function monDMY(d){var p=String(d).split('-');return p.length===3?(p[2]+'/'+p[1]):esc(String(d));}
   function monChartSVG(hist,view){
@@ -1089,6 +1090,8 @@
     var teto=(cfg.hotel_teto!=null&&cfg.hotel_teto!=='')?Math.round(+cfg.hotel_teto):250;
     var hEst=(cfg.hotel_estrelas!=null&&cfg.hotel_estrelas!=='')?Math.round(+cfg.hotel_estrelas):4;
     var estMin=(cfg.hotel_estrelas_min!=null&&cfg.hotel_estrelas_min!=='')?Math.round(+cfg.hotel_estrelas_min):4;
+    var notaMin=(cfg.hotel_nota_min!=null&&cfg.hotel_nota_min!=='')?(+cfg.hotel_nota_min):4;
+    var bLink=bookingUrl(cfg.hotel_nome,melhor.checkin,melhor.checkout);
     var hLive=cfg.hotel_fonte==='serpapi';
     var hNome=cfg.hotel_nome?esc(cfg.hotel_nome):null;
     var hRat=(cfg.hotel_rating!=null&&cfg.hotel_rating!=='')?(' · ⭐ '+(+cfg.hotel_rating).toFixed(1).replace('.',',')):'';
@@ -1100,11 +1103,19 @@
       '<div class="sub" style="margin:2px 0 10px">Casal (Diego + Débora) · nas datas de '+esc(melhor.titulo||'')+' · '+eurM(cfg.hotel_noite)+'/noite × '+(+cfg.hotel_noites)+' noites · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
       '<div class="kpi"><div class="k"><div class="l">Total em euros</div><div class="v">'+eurM(hEUR)+'</div></div>'+
         '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div>'+
-      (hLink?'<a class="btn soft" style="margin-top:10px;display:block;text-align:center;text-decoration:none" href="'+esc(hLink)+'" target="_blank" rel="noopener">🔗 Ver o hotel</a>':'')+
+      ((hLink||bLink)?'<div class="row" style="margin-top:10px;gap:8px">'+
+        (hLink?'<a class="btn soft" style="flex:1;margin:0;text-align:center;text-decoration:none;padding:11px" href="'+esc(hLink)+'" target="_blank" rel="noopener">🌐 Site oficial</a>':'')+
+        (bLink?'<a class="btn soft" style="flex:1;margin:0;text-align:center;text-decoration:none;padding:11px" href="'+esc(bLink)+'" target="_blank" rel="noopener">🅱️ Booking</a>':'')+
+        '</div>'+(bLink?'<div class="sub" style="margin-top:5px;font-size:.78rem">No Booking, abra logado — seu desconto Genius aparece automaticamente.</div>':''):'')+
       '<label class="lbl" style="margin-top:12px">Padrão mínimo</label>'+
       '<div class="scroller" id="estWrap" style="gap:8px;margin-bottom:4px">'+
         '<span class="pill'+(estMin>=4?' on':'')+'" data-est="4" onclick="VUI.monPill(this)">4★</span>'+
         '<span class="pill'+(estMin<=3?' on':'')+'" data-est="3" onclick="VUI.monPill(this)">3★ ou 4★</span></div>'+
+      '<label class="lbl" style="margin-top:8px">Nota mínima</label>'+
+      '<div class="scroller" id="notaWrap" style="gap:8px;margin-bottom:4px">'+
+        '<span class="pill'+(notaMin<4.15?' on':'')+'" data-nota="4.0" onclick="VUI.monPill(this)">4,0+</span>'+
+        '<span class="pill'+(notaMin>=4.15&&notaMin<4.4?' on':'')+'" data-nota="4.3" onclick="VUI.monPill(this)">4,3+</span>'+
+        '<span class="pill'+(notaMin>=4.4?' on':'')+'" data-nota="4.5" onclick="VUI.monPill(this)">4,5+</span></div>'+
       '<div class="row" style="margin-top:8px;gap:8px;align-items:flex-end"><div style="flex:1"><label class="lbl">Teto do hotel (€/noite)</label><input class="f" id="hotTeto" type="number" inputmode="decimal" min="20" max="2000" value="'+teto+'" style="margin:0"></div>'+
         '<button class="btn soft" style="width:auto;margin:0;white-space:nowrap;padding:12px 14px" onclick="VUI.monTeto(this)">🔎 Testar</button></div>'+
       '<div class="sub" style="margin-top:6px">Escolhe o padrão e o teto, toca em Testar — vê como fica o melhor combo. €150 já é faixa de 3★.</div>'+
@@ -1303,15 +1314,17 @@
       v=Math.round(Math.min(2000,v));
       var pe=document.querySelector('#estWrap .pill.on');
       var est=pe?parseInt(pe.getAttribute('data-est'),10):4;
+      var pn=document.querySelector('#notaWrap .pill.on');
+      var nota=pn?parseFloat(pn.getAttribute('data-nota')):4;
       if(btn){btn.disabled=true;btn.textContent='salvando…';}
       try{
-        var s=await sb.rpc('set_hotel_filtros',{p_teto:v,p_estrelas:est});
+        var s=await sb.rpc('set_hotel_filtros',{p_teto:v,p_estrelas:est,p_nota:nota});
         if(s&&s.error){toast('Falha ao salvar: '+s.error.message);if(btn){btn.disabled=false;btn.textContent='🔎 Testar';}return;}
         if(btn)btn.textContent='buscando hotel…';
         await fetch(HOTEL_FN,{method:'POST'}).catch(function(){return null;});
       }catch(e){}
       if(btn){btn.disabled=false;btn.textContent='🔎 Testar';}
-      toast('Buscando '+(est<=3?'3★ ou 4★':'4★')+' até € '+v+'…');
+      toast('Buscando '+(est<=3?'3★+':'4★')+' nota '+nota.toString().replace('.',',')+'+ até € '+v+'…');
       monitorRender('monWrap');
     },
     fab:function(){if(!espacoId){novaViagemForm();return;}var f=SEC_FAB[view];if(f)f();}
