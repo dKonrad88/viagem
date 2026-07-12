@@ -68,6 +68,18 @@
   .row{display:flex;align-items:center;gap:10px}
   .between{justify-content:space-between}
   .chip{display:inline-block;font-size:.72rem;padding:3px 9px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--muted)}
+  /* status da viagem + monitor */
+  .status-chip{flex:none;font-weight:600}
+  .st-plan{background:rgba(24,95,165,.16);border-color:#2f6ea8;color:#6aa9e0}
+  .st-mon{background:rgba(26,122,138,.18);border-color:#1a7a8a;color:#3fb6c8}
+  .st-conf{background:rgba(31,157,99,.18);border-color:#1f9d63;color:#37c07d}
+  .st-warn{background:rgba(210,138,20,.18);border-color:#c8892a;color:#e0a53f}
+  .st-done{background:rgba(159,177,194,.16);border-color:var(--muted);color:var(--muted)}
+  .mon-best{border-color:var(--ok)}
+  .mon-total{background:linear-gradient(135deg,var(--card2),var(--card))}
+  .mon-pp{padding:10px 0;border-top:1px solid var(--line)}
+  .mon-pp:first-of-type{border-top:0}
+  .mon-refresh{width:auto!important;padding:8px 12px!important;margin:0!important;font-size:.82rem!important}
   .pill{border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:999px;padding:7px 14px;font-size:.82rem;cursor:pointer;font-family:inherit;white-space:nowrap}
   .pill.on{background:linear-gradient(135deg,#185FA5,#1a7a8a);color:#fff;border-color:transparent}
   .scroller{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
@@ -302,7 +314,15 @@
   /* ---------- espaço (reaproveita o motor do "lista") ---------- */
   async function carregarEspacos(){
     var r=await sb.from('listas').select('id,nome,tipo').eq('tipo','viagem').order('created_at');
-    return r.error?[]:(r.data||[]);
+    if(r.error)return [];
+    var lst=r.data||[];
+    try{
+      var st=await sb.from('viagem_state').select('lista_id,value').eq('key','meta');
+      var map={};
+      if(!st.error)(st.data||[]).forEach(function(x){map[x.lista_id]=(x.value&&x.value.status)||null;});
+      lst.forEach(function(e){e.status=map[e.id]||'Planejando';});
+    }catch(err){lst.forEach(function(e){e.status='Planejando';});}
+    return lst;
   }
   async function criarEspaco(nome){
     var r=await sb.rpc('criar_lista',{p_nome:(nome&&nome.trim())||'Nova viagem',p_tipo:'viagem'});
@@ -387,6 +407,9 @@
   /* ================= TELAS DA VIAGEM ================= */
   var view='home', focoState={diaIdx:0,stopIdx:0};
   var SECOES=[['🏠','Início','resumo da viagem','inicio'],['🗺️','Roteiro','o dia a dia','roteiro'],['🧳','Checklist','malas e compras','checklist'],['💸','Gastos','orçamento','gastos'],['📄','Documentos','passagens, reservas','documentos']];
+  var STATUS_LIST=['Planejando','Monitoramento','Confirmada','Concluída'];
+  var STATUS_META={'Planejando':{ic:'📝',cls:'st-plan'},'Monitoramento':{ic:'📡',cls:'st-mon'},'Confirmada':{ic:'✅',cls:'st-conf'},'Concluída':{ic:'🏁',cls:'st-done'}};
+  function statusChip(s){var m=STATUS_META[s];if(!m)return '';return '<span class="chip status-chip '+m.cls+'">'+m.ic+' '+esc(s)+'</span>';}
   var CATS=['Alimentação','Transporte','Hospedagem','Parques','Compras','Farmácia','Outros'];
   var CAT_DOTS={'Alimentação':'#fb923c','Transporte':'#60a5fa','Hospedagem':'#a78bfa','Parques':'#34d399','Compras':'#fbbf24','Farmácia':'#f87171','Outros':'#9ca3af'};
   var CL_PANELS=[['levar','🧳','Levar'],['comprar','🛍️','Comprar'],['visitar','📍','Visitar'],['previagem','✅','Pré-viagem']];
@@ -417,7 +440,7 @@
   function saveCheck(data){VIA.set(clKey(),data);}
   function dGastos(){var g=VIA.get('gastos',null);return Array.isArray(g)?g:[];}
   function dDocs(){var d=VIA.get('documentos',null);return Array.isArray(d)?d:[];}
-  function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5};return{total:80000,cambio:5};}
+  function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5,status:STATUS_META[m.status]?m.status:'Planejando'};return{total:80000,cambio:5,status:'Planejando'};}
   function tripStart(){var d=VIA.get('data',null);return (typeof d==='string'&&d)?d:null;}
   function dVoos(){var v=VIA.get('voos',null);return (v&&typeof v==='object'&&(v.ida||v.volta))?v:null;}
   function cdTarget(){var v=dVoos();if(v&&v.partida){var t=new Date(v.partida);if(!isNaN(t))return t;}var ts=tripStart();if(ts){var d=new Date(ts+'T00:00:00');if(!isNaN(d))return d;}return null;}
@@ -735,6 +758,7 @@
   function metaForm(){
     var m=dMeta();
     openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">🎯 Meta e câmbio</h2>'+
+      '<label class="lbl">Status da viagem</label><select class="f" id="mStatus">'+STATUS_LIST.map(function(s){return '<option value="'+esc(s)+'"'+(m.status===s?' selected':'')+'>'+STATUS_META[s].ic+' '+esc(s)+'</option>';}).join('')+'</select>'+
       '<label class="lbl">Meta total (R$)</label><input class="f" id="mTotal" type="number" inputmode="decimal" value="'+m.total+'">'+
       '<label class="lbl">Câmbio (US$ 1 = R$)</label><input class="f" id="mCambio" type="number" inputmode="decimal" value="'+m.cambio+'">'+
       '<button class="btn" onclick="VUI.metaSave()">Salvar</button>');
@@ -815,12 +839,65 @@
       '<button class="btn" id="dSaveBtn" onclick="VUI.docSave('+(d?d.id:'')+')">Salvar documento</button>');
   }
 
+  /* ================= MONITORAMENTO (voos + orçamento; read-only) ================= */
+  var MON_FN='https://jlouesrrmqeauzlgvrpw.supabase.co/functions/v1/flight-monitor';
+  function brlM(n){return 'R$ '+Math.round(+n||0).toLocaleString('pt-BR');}
+  function eurM(n){return '€ '+Math.round(+n||0).toLocaleString('pt-BR');}
+  function fmtUpd(ts){try{var d=new Date(ts);if(isNaN(d))return esc(String(ts));return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return esc(String(ts));}}
+  function monPP(nome,desc,val){return '<div class="row between mon-pp"><div><b>'+esc(nome)+'</b> <span class="sub">· '+esc(desc)+'</span></div><div style="font-weight:700">'+brlM(val)+'</div></div>';}
+  function renderMonitor(){
+    setTimeout(function(){monitorRender('monWrap');},0);
+    return '<div id="monWrap"><div class="card"><div class="sub">Carregando monitor…</div></div></div>';
+  }
+  async function monitorRender(elId){
+    var el=document.getElementById(elId);if(!el)return;
+    var head='<div class="card"><div class="row between"><h2>📡 Monitoramento</h2>'+
+      '<button class="btn soft mon-refresh" onclick="VUI.monRefresh(this)">🔄 Atualizar agora</button></div>'+
+      '<div class="sub" style="margin-top:6px">Voos POA → Paris · 3 passageiros · busca automática diária.</div></div>';
+    var vq,cq;
+    try{
+      vq=await sb.from('viagem_monitor').select('*').order('checkin');
+      cq=await sb.from('viagem_orcamento').select('*').eq('id',1).maybeSingle();
+    }catch(e){el.innerHTML=head+'<div class="card"><div class="sub">Não consegui ler o monitor agora.</div></div>';return;}
+    if(vq.error){el.innerHTML=head+'<div class="card"><div class="sub">Não consegui ler o monitor: '+esc(vq.error.message)+'</div></div>';return;}
+    var voos=vq.data||[], cfg=(cq&&cq.data)||{hotel_noite:220,hotel_noites:12,fx_eur_brl:5.9,alvo_pp:4000};
+    if(!voos.length){el.innerHTML=head+'<div class="card"><div class="sub">Sem dados do monitor ainda — toque em "Atualizar agora".</div></div>';return;}
+    var melhor=voos.slice().sort(function(a,b){return (+a.preco_total||1e12)-(+b.preco_total||1e12);})[0];
+    var hEUR=(+cfg.hotel_noite)*(+cfg.hotel_noites), hBRL=hEUR*(+cfg.fx_eur_brl), mh=hBRL/2;
+    var menorPP=+melhor.preco_por_pessoa, tot=(+melhor.preco_total)+hBRL;
+    var acima=menorPP>(+cfg.alvo_pp);
+    var janelas=voos.map(function(x){
+      var live=x.fonte==='serpapi', best=x.slug===melhor.slug;
+      return '<div class="card mon-win'+(best?' mon-best':'')+'">'+
+        '<div class="row between"><h2 style="font-size:1rem">✈️ '+esc(x.titulo||'')+'</h2>'+
+          (live?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
+        '<div class="sub" style="margin:4px 0 10px">'+esc(x.origem||'')+' → '+esc(x.destino||'')+' · '+esc(x.cia||'')+(best?' · <b style="color:var(--ok)">mais barato</b>':'')+'</div>'+
+        '<div class="kpi"><div class="k"><div class="l">Total (3 pax)</div><div class="v">'+brlM(x.preco_total)+'</div></div>'+
+          '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div></div>';
+    }).join('');
+    var hotel='<div class="card"><div class="row between"><h2 style="font-size:1rem">🏨 Hotel</h2><span class="chip">'+(+cfg.hotel_noites)+' noites</span></div>'+
+      '<div class="sub" style="margin:4px 0 10px">Casal (Diego + Débora) · '+eurM(cfg.hotel_noite)+'/noite · câmbio € 1 = R$ '+(+cfg.fx_eur_brl).toFixed(2).replace('.',',')+'</div>'+
+      '<div class="kpi"><div class="k"><div class="l">Total em euros</div><div class="v">'+eurM(hEUR)+'</div></div>'+
+        '<div class="k"><div class="l">≈ em reais</div><div class="v">'+brlM(hBRL)+'</div></div></div></div>';
+    var alvoChip=acima?'<span class="chip status-chip st-warn">acima do alvo</span>':'<span class="chip status-chip st-conf">dentro do alvo</span>';
+    var totCard='<div class="card mon-total"><div class="gtot"><div class="v">'+brlM(tot)+'</div><div class="of">total geral estimado · voo mais barato + hotel</div></div>'+
+      '<div class="row between" style="margin-top:12px"><span class="sub">Menor por pessoa (voo): <b style="color:var(--ink)">'+brlM(menorPP)+'</b></span>'+alvoChip+'</div>'+
+      '<div class="sub" style="margin-top:4px">Alvo por pessoa: '+brlM(cfg.alvo_pp)+'</div></div>';
+    var pp='<div class="card"><h2 style="font-size:1rem">👥 Por pessoa</h2>'+
+      '<div class="sub" style="margin:4px 0 6px">Diego e Débora dividem o hotel; o fotógrafo entra só no voo.</div>'+
+      monPP('Diego','voo + ½ hotel',menorPP+mh)+
+      monPP('Débora','voo + ½ hotel',menorPP+mh)+
+      monPP('Fotógrafo','só o voo',menorPP)+'</div>';
+    var upd=melhor.atualizado_em?('<div class="sub" style="text-align:center;margin-top:14px">atualizado em '+fmtUpd(melhor.atualizado_em)+'</div>'):'';
+    el.innerHTML=head+janelas+hotel+totCard+pp+upd;
+  }
+
   /* ================= ROUTER ================= */
   function renderTrips(){
     var lista;
     if(espacos.length){
       lista='<div class="trips">'+espacos.map(function(e){
-        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-nm">'+esc(e.nome||'Viagem')+'</span><span class="trip-go">›</span></button>';
+        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-nm">'+esc(e.nome||'Viagem')+'</span>'+statusChip(e.status)+'<span class="trip-go">›</span></button>';
       }).join('')+'</div>';
     } else lista='<div class="empty">Você ainda não tem viagens.<br>Toque no + para criar a primeira.</div>';
     return lista+
@@ -837,7 +914,7 @@
       '<label class="lbl">Data de início (opcional)</label><input class="f" id="nvData" type="date">'+
       '<button class="btn" onclick="VUI.novaViagemSave()">Criar viagem</button>');
   }
-  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos'};
+  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos',monitor:'📡 Monitoramento'};
   var SEC_FAB={gastos:gastoForm,documentos:docForm,roteiro:function(){diaForm();},checklist:function(){secForm();}};
   function render(){
     var app=$('#app');
@@ -861,7 +938,9 @@
     if(view==='home'){
       if(back)back.style.display='flex';if(hdr)hdr.classList.add('withback');
       $('#hsub').textContent=espacoNome;
-      var tiles=SECOES.map(function(s){return '<div class="tile" onclick="VUI.go(\''+s[3]+'\')"><div class="ic">'+s[0]+'</div><div class="t">'+esc(s[1])+'</div><div class="s">'+esc(s[2])+'</div></div>';}).join('');
+      var secs=SECOES.slice();
+      if(dMeta().status==='Monitoramento')secs.splice(1,0,['📡','Monitoramento','voos & orçamento ao vivo','monitor']);
+      var tiles=secs.map(function(s){return '<div class="tile" onclick="VUI.go(\''+s[3]+'\')"><div class="ic">'+s[0]+'</div><div class="t">'+esc(s[1])+'</div><div class="s">'+esc(s[2])+'</div></div>';}).join('');
       app.innerHTML='<div class="grid">'+tiles+'</div>';
       return;
     }
@@ -874,6 +953,7 @@
     else if(view==='checklist')html=renderChecklist();
     else if(view==='gastos')html=renderGastos();
     else if(view==='documentos')html=renderDocumentos();
+    else if(view==='monitor')html=renderMonitor();
     app.innerHTML=html;
     if(SEC_FAB[view]&&fab){fab.style.display='flex';}
   }
@@ -932,7 +1012,7 @@
       if(!divide.length){toast('Marque quem divide.');return;}
       var gs=dGastos();gs.push({id:Date.now(),desc:desc,cat:cat,moeda:moeda,valor:val,data:data,pagou:pagou,divide:divide});VIA.set('gastos',gs);closeSheet();render();toast('Gasto lançado ✓');},
     gastoDel:function(id){var gs=dGastos().filter(function(g){return g.id!==id;});VIA.set('gastos',gs);render();},
-    metaSave:function(){var t=parseFloat(($('#mTotal').value||'').replace(',','.'))||80000,c=parseFloat(($('#mCambio').value||'').replace(',','.'))||5;VIA.set('meta',{total:t,cambio:c});closeSheet();render();toast('Meta atualizada ✓');},
+    metaSave:async function(){var t=parseFloat(($('#mTotal').value||'').replace(',','.'))||80000,c=parseFloat(($('#mCambio').value||'').replace(',','.'))||5;var stEl=$('#mStatus'),st=(stEl&&STATUS_META[stEl.value])?stEl.value:'Planejando';await VIA.set('meta',{total:t,cambio:c,status:st});closeSheet();espacos=await carregarEspacos();render();toast('Meta atualizada ✓');},
     docForm:docForm, docEdit:function(id){docForm(id);}, docMulti:docMulti,
     docGroup:function(t){docGroupsOpen[t]=!docGroupsOpen[t];render();},
     docSave:async function(id){var nome=$('#dNome').value.trim();if(!nome){toast('Dê um nome ao documento.');return;}
@@ -950,6 +1030,14 @@
     docOpen:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];if(!d||!d.arquivo||!d.arquivo.path)return;toast('Abrindo anexo…');var u=await docSignedUrl(d.arquivo.path);if(u)window.open(u,'_blank','noopener');else toast('Não consegui abrir o anexo.');},
     docDel:async function(id){var d=dDocs().filter(function(x){return x.id===id;})[0];var ds=dDocs().filter(function(x){return x.id!==id;});VIA.set('documentos',ds);render();if(d&&d.arquivo&&d.arquivo.path&&sb){try{await sb.storage.from(DOC_BUCKET).remove([d.arquivo.path]);}catch(e){}}},
     joinForm:joinForm,
+    monRefresh:async function(btn){
+      if(btn){btn.disabled=true;btn.textContent='buscando…';}
+      var ok=false;
+      try{var r=await fetch(MON_FN,{method:'POST'});ok=r&&r.ok;}catch(e){}
+      if(btn){btn.disabled=false;btn.textContent='🔄 Atualizar agora';}
+      toast(ok?'Preços atualizados ✓':'Busca disparada — atualizando…');
+      monitorRender('monWrap');
+    },
     fab:function(){if(!espacoId){novaViagemForm();return;}var f=SEC_FAB[view];if(f)f();}
   };
 
