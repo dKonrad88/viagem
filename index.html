@@ -44,7 +44,9 @@
   .trip-row{display:flex;align-items:center;gap:12px;width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;font-family:inherit;color:var(--ink);text-align:left}
   .trip-row:active{background:var(--card)}
   .trip-ic{font-size:1.15rem;flex:none;opacity:.9}
-  .trip-nm{flex:1;font-weight:500;font-size:.95rem}
+  .trip-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .trip-nm{font-weight:500;font-size:.95rem}
+  .trip-dt{font-size:.76rem;color:var(--muted)}
   .trip-go{flex:none;color:var(--muted);font-size:1.3rem;line-height:1}
   .linkbtn{background:none;border:0;color:var(--muted);font-size:.85rem;cursor:pointer;font-family:inherit;padding:8px;text-decoration:none}
   .linkbtn:active{color:var(--primary2)}
@@ -296,6 +298,12 @@
   var $=function(s){return document.querySelector(s);};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function cidade(n){var c=String(n==null?'':n).replace(/^\s*viagem\s+/i,'').trim();return c||String(n||'Viagem');}
+  function _brdate(iso){var p=String(iso||'').split('-');return p.length<3?null:{d:p[2].slice(0,2),m:p[1],y:p[0]};}
+  function fmtPeriodo(ini,fim){var a=_brdate(ini),b=_brdate(fim);
+    if(a&&b)return a.y===b.y?(a.d+'/'+a.m+' – '+b.d+'/'+b.m+'/'+b.y):(a.d+'/'+a.m+'/'+a.y+' – '+b.d+'/'+b.m+'/'+b.y);
+    if(a)return 'a partir de '+a.d+'/'+a.m+'/'+a.y;
+    if(b)return 'até '+b.d+'/'+b.m+'/'+b.y;
+    return '';}
   var toastT=null;
   function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2000);}
 
@@ -351,11 +359,16 @@
     if(r.error)return [];
     var lst=r.data||[];
     try{
-      var st=await sb.from('viagem_state').select('lista_id,value').eq('key','meta');
-      var map={};
-      if(!st.error)(st.data||[]).forEach(function(x){map[x.lista_id]=(x.value&&x.value.status)||null;});
-      lst.forEach(function(e){e.status=map[e.id]||'Planejando';});
+      var st=await sb.from('viagem_state').select('lista_id,key,value').in('key',['meta','data','data_fim']);
+      var mS={},mI={},mF={};
+      if(!st.error)(st.data||[]).forEach(function(x){
+        if(x.key==='meta')mS[x.lista_id]=(x.value&&x.value.status)||null;
+        else if(x.key==='data')mI[x.lista_id]=x.value||null;
+        else if(x.key==='data_fim')mF[x.lista_id]=x.value||null;
+      });
+      lst.forEach(function(e){e.status=mS[e.id]||'Planejando';e.dataInicio=mI[e.id]||null;e.dataFim=mF[e.id]||null;});
     }catch(err){lst.forEach(function(e){e.status='Planejando';});}
+    lst.sort(function(a,b){var da=a.dataInicio||'9999-12-31',db=b.dataInicio||'9999-12-31';return da<db?-1:(da>db?1:0);});
     return lst;
   }
   async function criarEspaco(nome){
@@ -1064,7 +1077,8 @@
     var lista;
     if(espacos.length){
       lista='<div class="trips">'+espacos.map(function(e){
-        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-nm">'+esc(cidade(e.nome))+'</span>'+statusChip(e.status)+'<span class="trip-go">›</span></button>';
+        var per=fmtPeriodo(e.dataInicio,e.dataFim);
+        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-main"><span class="trip-nm">'+esc(cidade(e.nome))+'</span><span class="trip-dt">'+(per?('📅 '+esc(per)):'datas a definir')+'</span></span>'+statusChip(e.status)+'<span class="trip-go">›</span></button>';
       }).join('')+'</div>';
     } else lista='<div class="empty">Você ainda não tem viagens.<br>Toque no + para criar a primeira.</div>';
     return lista+
