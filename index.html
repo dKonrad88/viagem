@@ -228,6 +228,16 @@
   .vtbl th .mv{border:none;background:transparent;color:var(--primary2);cursor:pointer;font-size:.85rem;padding:5px 5px;font-family:inherit;line-height:1;border-radius:6px}
   .vtbl th .mv:active{background:var(--primary2);color:#fff}
   .vtbl th{padding:2px 4px}
+  .mapctl{margin-bottom:10px}
+  .mapsel{margin-bottom:8px}
+  .mchips{display:flex;flex-wrap:wrap;gap:6px}
+  .mchip{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:5px 11px;font-size:.8rem;cursor:pointer;opacity:.42;transition:.15s;font-family:inherit}
+  .mchip.on{opacity:1;color:var(--ink);border-color:var(--mc);box-shadow:inset 0 0 0 1px var(--mc)}
+  .mapcanvas{position:relative;z-index:0;height:58vh;min-height:320px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:var(--card2)}
+  .mapcount{text-align:center;margin-top:8px}
+  .mpin span{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:15px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55)}
+  .leaflet-popup-content{font-family:inherit;font-size:.9rem}
+  .leaflet-container{font-family:inherit}
 </style>
 </head>
 <body>
@@ -406,7 +416,7 @@
 
   /* ================= TELAS DA VIAGEM ================= */
   var view='home', focoState={diaIdx:0,stopIdx:0};
-  var SECOES=[['🏠','Início','resumo da viagem','inicio'],['🗺️','Roteiro','o dia a dia','roteiro'],['🧳','Checklist','malas e compras','checklist'],['💸','Gastos','orçamento','gastos'],['📄','Documentos','passagens, reservas','documentos']];
+  var SECOES=[['🏠','Início','resumo da viagem','inicio'],['🗺️','Roteiro','o dia a dia','roteiro'],['📍','Mapa','tudo no mapa','mapa'],['🧳','Checklist','malas e compras','checklist'],['💸','Gastos','orçamento','gastos'],['📄','Documentos','passagens, reservas','documentos']];
   var STATUS_LIST=['Planejando','Monitoramento','Confirmada','Concluída'];
   var STATUS_META={'Planejando':{ic:'📝',cls:'st-plan'},'Monitoramento':{ic:'📡',cls:'st-mon'},'Confirmada':{ic:'✅',cls:'st-conf'},'Concluída':{ic:'🏁',cls:'st-done'}};
   function statusChip(s){var m=STATUS_META[s];if(!m)return '';return '<span class="chip status-chip '+m.cls+'">'+m.ic+' '+esc(s)+'</span>';}
@@ -845,6 +855,57 @@
   function eurM(n){return '€ '+Math.round(+n||0).toLocaleString('pt-BR');}
   function fmtUpd(ts){try{var d=new Date(ts);if(isNaN(d))return esc(String(ts));return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return esc(String(ts));}}
   function monPP(nome,desc,val){return '<div class="row between mon-pp"><div><b>'+esc(nome)+'</b> <span class="sub">· '+esc(desc)+'</span></div><div style="font-weight:700">'+brlM(val)+'</div></div>';}
+  /* ================= MAPA (Leaflet lazy) ================= */
+  var MCAT={rest:{e:'🍴',c:'#d2533f',n:'Comer'},shop:{e:'🛍️',c:'#8b5cf6',n:'Compras'},merc:{e:'🛒',c:'#1f9d63',n:'Mercado'},park:{e:'🎢',c:'#185FA5',n:'Parque'},tour:{e:'🎡',c:'#e08a1e',n:'Passeio'},base:{e:'🏠',c:'#64748b',n:'Base'}};
+  function ensureLeaflet(){
+    return new Promise(function(res,rej){
+      if(window.L)return res();
+      var css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);
+      var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      s.onload=function(){res();};s.onerror=function(){rej();};document.head.appendChild(s);
+    });
+  }
+  function renderMapa(){
+    setTimeout(function(){mapaRender('mapWrap');},0);
+    return '<div id="mapWrap"><div class="card"><div class="sub">Carregando mapa…</div></div></div>';
+  }
+  async function mapaRender(elId){
+    var el=document.getElementById(elId);if(!el)return;
+    var pts=VIA.get('mapa_pontos',[]);
+    if(!Array.isArray(pts)||!pts.length){el.innerHTML='<div class="card"><h2 style="font-size:1rem">📍 Mapa</h2><div class="sub" style="margin-top:6px">Esta viagem ainda não tem pontos no mapa. Os pontos foram montados para a Viagem Orlando.</div></div>';return;}
+    try{await ensureLeaflet();}catch(e){el.innerHTML='<div class="card"><h2 style="font-size:1rem">📍 Mapa</h2><div class="sub" style="margin-top:6px">Não consegui carregar o mapa agora (sem internet?). Tente de novo mais tarde.</div></div>';return;}
+    var days=[];pts.forEach(function(p){(p.dias||[]).forEach(function(d){if(days.indexOf(d)<0)days.push(d);});});days.sort(function(a,b){return a-b;});
+    var dayOpts='<option value="all">Todos os dias</option>'+days.map(function(d){return '<option value="'+d+'">Dia '+d+'</option>';}).join('');
+    var chips=Object.keys(MCAT).map(function(k){return '<button class="mchip on" data-cat="'+k+'" style="--mc:'+MCAT[k].c+'">'+MCAT[k].e+' '+MCAT[k].n+'</button>';}).join('');
+    el.innerHTML='<div class="mapctl"><select id="mapDay" class="f mapsel">'+dayOpts+'</select><div class="mchips">'+chips+'</div></div>'+
+      '<div id="mapCanvas" class="mapcanvas"></div><div class="sub mapcount" id="mapCount"></div>';
+    if(window.__vmap){try{window.__vmap.remove();}catch(e){}window.__vmap=null;}
+    var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
+    var streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+    var map=L.map('mapCanvas',{layers:[sat],zoomControl:true,attributionControl:false}).setView([28.44,-81.47],10);
+    window.__vmap=map;
+    L.control.layers({'Satélite':sat,'Mapa':streets},null,{position:'topright'}).addTo(map);
+    var layer=L.layerGroup().addTo(map);
+    var day='all',catOn={};Object.keys(MCAT).forEach(function(k){catOn[k]=true;});
+    function mIcon(cat){var m=MCAT[cat]||MCAT.base;return L.divIcon({className:'mpin',html:'<span style="background:'+m.c+'">'+m.e+'</span>',iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-15]});}
+    function draw(){
+      layer.clearLayers();var b=[];
+      pts.forEach(function(p){
+        if(!catOn[p.cat])return;
+        if(day!=='all'&&(p.dias||[]).indexOf(day)<0)return;
+        var mk=L.marker([p.lat,p.lng],{icon:mIcon(p.cat)});
+        mk.bindPopup('<b>'+esc(p.nome)+'</b><br><span style="color:#8aa">Dia '+((p.dias||[]).join(', '))+'</span>');
+        mk.addTo(layer);b.push([p.lat,p.lng]);
+      });
+      var cnt=document.getElementById('mapCount');if(cnt)cnt.textContent=b.length+' '+(b.length===1?'lugar':'lugares')+(day==='all'?'':' no Dia '+day);
+      if(b.length)map.fitBounds(b,{padding:[36,36],maxZoom:15});
+    }
+    draw();
+    setTimeout(function(){map.invalidateSize();draw();},80);
+    document.getElementById('mapDay').addEventListener('change',function(){day=this.value==='all'?'all':parseInt(this.value,10);draw();});
+    el.querySelectorAll('.mchip').forEach(function(bt){bt.addEventListener('click',function(){var c=bt.getAttribute('data-cat');catOn[c]=!catOn[c];bt.classList.toggle('on',catOn[c]);draw();});});
+  }
+
   function renderMonitor(){
     setTimeout(function(){monitorRender('monWrap');},0);
     return '<div id="monWrap"><div class="card"><div class="sub">Carregando monitor…</div></div></div>';
@@ -914,7 +975,7 @@
       '<label class="lbl">Data de início (opcional)</label><input class="f" id="nvData" type="date">'+
       '<button class="btn" onclick="VUI.novaViagemSave()">Criar viagem</button>');
   }
-  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos',monitor:'📡 Monitoramento'};
+  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',mapa:'📍 Mapa',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos',monitor:'📡 Monitoramento'};
   var SEC_FAB={gastos:gastoForm,documentos:docForm,roteiro:function(){diaForm();},checklist:function(){secForm();}};
   function render(){
     var app=$('#app');
@@ -950,6 +1011,7 @@
     var html='';
     if(view==='inicio')html=renderInicio();
     else if(view==='roteiro')html=renderRoteiro();
+    else if(view==='mapa')html=renderMapa();
     else if(view==='checklist')html=renderChecklist();
     else if(view==='gastos')html=renderGastos();
     else if(view==='documentos')html=renderDocumentos();
