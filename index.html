@@ -244,7 +244,8 @@
   .rtbl td{padding:8px 8px;border-top:1px solid var(--line);vertical-align:top}
   .rtbl tr:first-child td{border-top:none}
   .rtbl tr.rnd td{border-top:2px solid var(--primary2)}
-  .rcd{font-weight:700;color:var(--primary2);text-align:center;width:22px}
+  .rcd{font-weight:700;color:var(--primary2);text-align:center;width:38px;white-space:nowrap}
+  .rcd-dt{font-size:.62rem;font-weight:600;color:var(--muted);margin-top:1px}
   .rcr{width:16px;text-align:center;font-size:1rem}
   .rcn{font-weight:600;line-height:1.25}
   .rct{color:var(--muted);font-size:.73rem;font-weight:400;margin-top:2px}
@@ -312,7 +313,7 @@
   "use strict";
   var SB_URL='https://jlouesrrmqeauzlgvrpw.supabase.co';
   var SB_KEY='sb_publishable_ulG1woVG1p1Seax63GGYPQ_PG6-8l-G';
-  var sb=null, user=null, espacoId=null, espacoNome='Viagem', dados={}, espacos=[];
+  var sb=null, user=null, espacoId=null, espacoNome='Viagem', dados={}, espacos=[], lastUid=null;
   var $=function(s){return document.querySelector(s);};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function cidade(n){var c=String(n==null?'':n).replace(/^\s*viagem\s+/i,'').trim();return c||String(n||'Viagem');}
@@ -322,6 +323,7 @@
     if(a)return 'a partir de '+a.d+'/'+a.m+'/'+a.y;
     if(b)return 'até '+b.d+'/'+b.m+'/'+b.y;
     return '';}
+  function diaData(d){var s=VIA.get('data',null);if(!s)return '';var dt=new Date(s+'T12:00:00');if(isNaN(dt))return '';dt.setDate(dt.getDate()+((parseInt(d,10)||1)-1));return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2);}
   var toastT=null;
   function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2000);}
 
@@ -343,7 +345,7 @@
   }
 
   /* ---------- supabase ---------- */
-  function sbInit(){if(!sb&&window.supabase){try{sb=window.supabase.createClient(SB_URL,SB_KEY);sb.auth.onAuthStateChange(function(_e,sess){user=sess?sess.user:null;if(user){boot();}else{render();}});}catch(e){sb=null;}}return sb;}
+  function sbInit(){if(!sb&&window.supabase){try{sb=window.supabase.createClient(SB_URL,SB_KEY);sb.auth.onAuthStateChange(function(_e,sess){var uid=sess&&sess.user?sess.user.id:null;user=sess?sess.user:null;if(uid){if(uid!==lastUid){lastUid=uid;boot();}}else{lastUid=null;render();}});}catch(e){sb=null;}}return sb;}
 
   async function sbLogin(){
     sbInit();if(!sb){toast('Sem conexão.');return;}
@@ -978,7 +980,7 @@
       if(x.w)  lk.push('<a class="rl" href="'+esc(x.w)+'" target="_blank" rel="noopener" aria-label="Site">🌐</a>');
       if(x.e)  lk.push('<a class="rl" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(x.n+', '+x.e)+'" target="_blank" rel="noopener" aria-label="Google Maps">🗺️</a>');
       var links=lk.length?lk.join(''):'<span class="rna">—</span>';
-      return '<tr'+(nd?' class="rnd"':'')+'><td class="rcd">'+(nd?x.d:'')+'</td><td class="rcr">'+(RIC[x.r]||'')+'</td>'+
+      return '<tr'+(nd?' class="rnd"':'')+'><td class="rcd">'+(nd?(x.d+'<div class="rcd-dt">'+diaData(x.d)+'</div>'):'')+'</td><td class="rcr">'+(RIC[x.r]||'')+'</td>'+
         '<td class="rcn">'+esc(x.n)+(x.nv?' <span class="rtag">novo</span>':'')+'<div class="rct">'+esc(x.t)+'</div></td>'+
         '<td class="rcl">'+links+'</td></tr>';
     }).join('');
