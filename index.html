@@ -943,6 +943,8 @@
   function monPP(nome,desc,val){return '<div class="row between mon-pp"><div><b>'+esc(nome)+'</b> <span class="sub">· '+esc(desc)+'</span></div><div style="font-weight:700">'+brlM(val)+'</div></div>';}
   function bookingUrl(nome,ci,co){if(!nome||!ci||!co)return '';return 'https://www.booking.com/searchresults.html?ss='+encodeURIComponent(nome+', Paris')+'&checkin='+encodeURIComponent(ci)+'&checkout='+encodeURIComponent(co)+'&group_adults=2&no_rooms=1&group_children=0';}
   function nivelChip(n){if(n==='low')return '<span class="chip status-chip st-conf">🟢 preço baixo</span>';if(n==='high')return '<span class="chip status-chip st-warn">🔴 preço alto</span>';if(n==='typical')return '<span class="chip">preço típico</span>';return '';}
+  var SHOW_DATE='2027-04-26';
+  function showFolga(ci,co){if(!ci||!co)return '';var s=new Date(SHOW_DATE+'T00:00:00Z'),a=new Date(ci+'T00:00:00Z'),b=new Date(co+'T00:00:00Z');if(isNaN(s)||isNaN(a)||isNaN(b))return '';var antes=Math.round((s-a)/864e5),depois=Math.round((b-s)/864e5);if(antes<0||depois<0)return '';return '🎸 '+antes+' antes / '+depois+' depois do show';}
   var monChartView='total';
   function monDMY(d){var p=String(d).split('-');return p.length===3?(p[2]+'/'+p[1]):esc(String(d));}
   function monChartSVG(hist,view){
@@ -1081,7 +1083,7 @@
     var el=document.getElementById(elId);if(!el)return;
     var head='<div class="card"><div class="row between"><h2>📡 Monitoramento</h2>'+
       '<button class="btn soft mon-refresh" onclick="VUI.monRefresh(this)">🔄 Atualizar agora</button></div>'+
-      '<div class="sub" style="margin-top:6px">Voo (POA→Paris, 3 pax) + hotel central · datas flexíveis em Abril/Maio · busca diária ao vivo.</div></div>';
+      '<div class="sub" style="margin-top:6px">🎸 Show 30STM em Paris · 26/04/2027 · 12 noites com ≥3 dias de folga do show · voo (POA, 3 pax) + hotel · atualiza 06h e 15h.</div></div>';
     var vq,cq;
     try{
       vq=await sb.from('viagem_monitor').select('*').order('checkin');
@@ -1101,7 +1103,8 @@
       return '<div class="card mon-win'+(best?' mon-best':'')+'">'+
         '<div class="row between"><h2 style="font-size:1rem">✈️ '+esc(x.titulo||'')+'</h2>'+
           (live?'<span class="chip status-chip st-mon">📡 ao vivo</span>':'<span class="chip">estimativa</span>')+'</div>'+
-        '<div class="sub" style="margin:4px 0 10px">'+esc(x.origem||'')+' → '+esc(x.destino||'')+' · '+esc(x.cia||'')+(best?' · <b style="color:var(--ok)">★ melhor combo</b>':'')+'</div>'+
+        '<div class="sub" style="margin:4px 0 6px">'+esc(x.origem||'')+' → '+esc(x.destino||'')+(x.cia?' · '+esc(x.cia):'')+(best?' · <b style="color:var(--ok)">★ melhor combo</b>':'')+'</div>'+
+        (showFolga(x.checkin,x.checkout)?'<div class="sub" style="margin:0 0 10px;color:#c9a24a">'+showFolga(x.checkin,x.checkout)+'</div>':'')+
         '<div class="kpi"><div class="k"><div class="l">Total (3 pax)</div><div class="v">'+brlM(x.preco_total)+'</div></div>'+
           '<div class="k"><div class="l">Por pessoa</div><div class="v">'+brlM(x.preco_por_pessoa)+'</div></div></div>'+
         (x.preco_nivel?'<div class="row between" style="margin-top:10px"><span>'+nivelChip(x.preco_nivel)+'</span>'+(x.preco_tipico_min?'<span class="sub">típico '+brlM(x.preco_tipico_min)+'–'+brlM(x.preco_tipico_max)+'</span>':'')+'</div>':'')+
@@ -1170,7 +1173,7 @@
         var badge=c.over_teto?' <span class="chip status-chip st-warn" style="font-size:.6rem;padding:1px 6px">hotel &gt;€'+teto+'</span>':'';
         return '<div class="row between mon-pp"><div><b style="color:var(--ink)">'+esc(c.titulo||'')+'</b>'+(win?' <span style="color:var(--ok)">★</span>':'')+'<div class="sub">'+det+badge+'</div></div><div style="font-weight:700'+(win?';color:var(--ok)':'')+'">'+(c.total!=null?brlM(c.total):'—')+'</div></div>';
       }).join('');
-      compCard='<div class="card"><h2 style="font-size:1rem">🗓️ Abril ou Maio?</h2><div class="sub" style="margin:4px 0 6px">Total voo + hotel por janela · ★ = melhor combinação.</div>'+linhas+'</div>';
+      compCard='<div class="card"><h2 style="font-size:1rem">🗓️ Janelas do show</h2><div class="sub" style="margin:4px 0 6px">Total voo + hotel por janela · ★ = melhor combinação.</div>'+linhas+'</div>';
     }
     var chartCard='<div class="card"><h2 style="font-size:1rem">📈 Histórico diário</h2>'+
       '<div class="scroller" style="margin:10px 0 8px;gap:8px">'+
@@ -1178,7 +1181,9 @@
         '<span class="pill'+(monChartView==='voo'?' on':'')+'" onclick="VUI.monChart(\'voo\')">Só voo</span>'+
       '</div>'+monChartSVG(hist,monChartView)+'</div>';
     var upd=melhor.atualizado_em?('<div class="sub" style="text-align:center;margin-top:14px">atualizado em '+fmtUpd(melhor.atualizado_em)+'</div>'):'';
-    el.innerHTML=head+banner+compCard+janelas+hotel+totCard+chartCard+pp+upd;
+    var estimativa=voos.length&&voos.every(function(v){return v.fonte!=='serpapi';});
+    var aviso=estimativa?'<div class="card" style="background:rgba(210,138,20,.14);border-color:#c8892a"><div class="sub" style="color:#e0a53f"><b>⏳ Buscas pausadas até 11/08</b> — a cota grátis do buscador zerou este mês. Os valores abaixo são estimativa; no dia 11 volta a atualizar sozinho (06h e 15h).</div></div>':'';
+    el.innerHTML=head+aviso+banner+compCard+janelas+hotel+totCard+chartCard+pp+upd;
   }
 
   /* ================= ROUTER ================= */
