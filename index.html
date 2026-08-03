@@ -22,7 +22,7 @@
   :root[data-trip="brasil"]{--bg:#FAFBF8;--card:#ffffff;--card2:#f3f6f1;--ink:#1b241e;--muted:#8a948c;--line:#ecefe9;--primary:#1E8A5A;--primary2:#1E8A5A;--primary-d:#166b46;--accent:#1E8A5A;--grad:linear-gradient(135deg,#1E8A5A,#2fa36b);--fdisp:'Inter',sans-serif}
   :root[data-trip="brasil"][data-theme="dark"]{--bg:#0C1F38;--card:#14294a;--card2:#1a335c;--ink:#eaf0f6;--muted:#8fa2b8;--line:#26436b;--primary:#2FA36B;--primary2:#2FA36B;--primary-d:#166b46;--accent:#7bd3a0;--grad:linear-gradient(135deg,#2FA36B,#3bbd7f)}
   /* ===== EMBARQUE — Orlando (cartão de embarque) ===== */
-  :root[data-trip="embarque"]{--bg:#EFE7D6;--card:#F7F1E3;--card2:#EADFCB;--ink:#0F2A4A;--muted:#7d8ea0;--line:#dcd2bf;--primary:#0F2A4A;--primary2:#C2413A;--primary-d:#0b2038;--accent:#C2413A;--grad:linear-gradient(135deg,#123a63,#0F2A4A);--header-bg:#0F2A4A;--fdisp:'Archivo','Arial Narrow',sans-serif;--fmono:'Space Mono',ui-monospace,monospace}
+  :root[data-trip="embarque"]{--bg:#FFFFFF;--card:#F8FAFC;--card2:#EEF2F7;--ink:#0F2A4A;--muted:#7d8ea0;--line:#E2E8F0;--primary:#0F2A4A;--primary2:#C2413A;--primary-d:#0b2038;--accent:#C2413A;--grad:linear-gradient(135deg,#123a63,#0F2A4A);--header-bg:#0F2A4A;--fdisp:'Archivo','Arial Narrow',sans-serif;--fmono:'Space Mono',ui-monospace,monospace}
   :root[data-trip="embarque"][data-theme="dark"]{--bg:#0A1A2C;--card:#112a44;--card2:#16324f;--ink:#EFE7D6;--muted:#9fb6cf;--line:#20395a;--primary:#EFE7D6;--primary2:#E8756A;--primary-d:#081426;--accent:#E8756A;--grad:linear-gradient(135deg,#1c4a7a,#123a63);--header-bg:#081426}
   /* ===== PARIS — nuit + Eiffel ===== */
   :root[data-trip="paris"]{--bg:#EEF1F6;--card:#ffffff;--card2:#e7ecf3;--ink:#14213D;--muted:#6b7690;--line:#dde3ec;--primary:#2E4C8A;--primary2:#B08D52;--primary-d:#20386a;--accent:#B08D52;--grad:linear-gradient(135deg,#2E4C8A,#3a5fa8);--fdisp:'Playfair Display',Georgia,serif}
@@ -298,7 +298,12 @@
   .fmono{font-family:var(--fmono)}
   .sec-title{font-family:var(--fdisp);font-size:1.45rem;font-weight:700;margin:0 0 14px;letter-spacing:-.01em}
   /* ===== HERÓI EMBARQUE (cartão de embarque) ===== */
-  .hero-emb{background:var(--header-bg);color:#fff;margin:0 -16px;padding:4px 18px 20px;border-radius:0 0 24px 24px}
+  .hero-emb{background:var(--header-bg);color:#fff;margin:-16px -16px 0;padding:14px 18px 20px;border-radius:0 0 24px 24px}
+  /* header pintado quando o herói de embarque encosta nele (azul até o topo) */
+  :root[data-trip="embarque"] .header.onhero{background:var(--header-bg);color:#fff}
+  :root[data-trip="embarque"] .header.onhero .theme-btn,
+  :root[data-trip="embarque"] .header.onhero .cfg-btn,
+  :root[data-trip="embarque"] .header.onhero .back-btn{color:#fff;opacity:.85}
   .he-ey{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700}
   .he-h1{font-family:var(--fdisp);font-size:1.55rem;font-weight:800;letter-spacing:.02em;text-transform:uppercase;margin-top:2px;color:#fff}
   .he-sub{font-family:var(--fmono);font-size:.72rem;color:rgba(255,255,255,.66);margin-top:2px}
@@ -1322,7 +1327,7 @@
   function render(){
     var app=$('#app');
     var back=$('#backBtn'), fab=$('#fab'), hdr=$('.header');
-    if(back)back.style.display='none';if(fab)fab.style.display='none';if(hdr)hdr.classList.remove('withback');
+    if(back)back.style.display='none';if(fab)fab.style.display='none';if(hdr){hdr.classList.remove('withback');hdr.classList.remove('onhero');}
     applyTheme();
     if(!user){
       $('#hsub').textContent='Entre na sua conta';
@@ -1340,7 +1345,7 @@
       return;
     }
     if(view==='home'){
-      if(back)back.style.display='flex';if(hdr)hdr.classList.add('withback');
+      if(back)back.style.display='flex';if(hdr){hdr.classList.add('withback');hdr.classList.add('onhero');}
       $('#hsub').textContent=cidade(espacoNome);
       var secs=SECOES.slice();
       if(dMeta().status==='Monitoramento')secs.splice(1,0,['📡','Monitoramento','voos & orçamento ao vivo','monitor']);
