@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-trip="brasil" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -12,29 +12,43 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Archivo:wght@500;600;700;800&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{--bg:#0e1620;--card:#16222e;--card2:#1c2b3a;--ink:#e9eef3;--muted:#9fb1c2;--line:#243443;--primary:#185FA5;--primary2:#1a7a8a;--primary-d:#0d3d6b;--ok:#1f9d63;--erro:#d2533f;--radius:14px}
   [data-theme="light"]{--bg:#eef1f4;--card:#ffffff;--card2:#f4f7fa;--ink:#16202b;--muted:#5b6b7d;--line:#e0e6ec}
+  :root{--grad:var(--grad);--header-bg:transparent;--accent:#1a7a8a;--fdisp:'Inter',sans-serif;--fmono:'Space Mono',ui-monospace,monospace}
+  /* ===== BRASIL — Minhas viagens (clean) ===== */
+  :root[data-trip="brasil"]{--bg:#FAFBF8;--card:#ffffff;--card2:#f3f6f1;--ink:#1b241e;--muted:#8a948c;--line:#ecefe9;--primary:#1E8A5A;--primary2:#1E8A5A;--primary-d:#166b46;--accent:#1E8A5A;--grad:linear-gradient(135deg,#1E8A5A,#2fa36b);--fdisp:'Inter',sans-serif}
+  :root[data-trip="brasil"][data-theme="dark"]{--bg:#0C1F38;--card:#14294a;--card2:#1a335c;--ink:#eaf0f6;--muted:#8fa2b8;--line:#26436b;--primary:#2FA36B;--primary2:#2FA36B;--primary-d:#166b46;--accent:#7bd3a0;--grad:linear-gradient(135deg,#2FA36B,#3bbd7f)}
+  /* ===== EMBARQUE — Orlando (cartão de embarque) ===== */
+  :root[data-trip="embarque"]{--bg:#EFE7D6;--card:#F7F1E3;--card2:#EADFCB;--ink:#0F2A4A;--muted:#7d8ea0;--line:#dcd2bf;--primary:#0F2A4A;--primary2:#C2413A;--primary-d:#0b2038;--accent:#C2413A;--grad:linear-gradient(135deg,#123a63,#0F2A4A);--header-bg:#0F2A4A;--fdisp:'Archivo','Arial Narrow',sans-serif;--fmono:'Space Mono',ui-monospace,monospace}
+  :root[data-trip="embarque"][data-theme="dark"]{--bg:#0A1A2C;--card:#112a44;--card2:#16324f;--ink:#EFE7D6;--muted:#9fb6cf;--line:#20395a;--primary:#EFE7D6;--primary2:#E8756A;--primary-d:#081426;--accent:#E8756A;--grad:linear-gradient(135deg,#1c4a7a,#123a63);--header-bg:#081426}
+  /* ===== PARIS — nuit + Eiffel ===== */
+  :root[data-trip="paris"]{--bg:#EEF1F6;--card:#ffffff;--card2:#e7ecf3;--ink:#14213D;--muted:#6b7690;--line:#dde3ec;--primary:#2E4C8A;--primary2:#B08D52;--primary-d:#20386a;--accent:#B08D52;--grad:linear-gradient(135deg,#2E4C8A,#3a5fa8);--fdisp:'Playfair Display',Georgia,serif}
+  :root[data-trip="paris"][data-theme="dark"]{--bg:#0F1B33;--card:#16264a;--card2:#1b2e57;--ink:#EAEFF7;--muted:#9fb0cf;--line:#294269;--primary:#4A6FB0;--primary2:#E4B85A;--primary-d:#0e1c38;--accent:#E4B85A;--grad:linear-gradient(135deg,#2E4C8A,#4A6FB0)}
   *{box-sizing:border-box;margin:0;padding:0}
   html{height:100%}
   body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:radial-gradient(900px 600px at 50% -10%,rgba(255,255,255,.05),transparent 60%),#0a0d12;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;touch-action:manipulation;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:14px}
   .phone{width:min(100%,392px);height:min(94vh,860px);background:var(--bg);border-radius:38px;border:1px solid rgba(255,255,255,.08);overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 0 0 8px #05080f,0 30px 70px rgba(0,0,0,.6),0 6px 18px rgba(0,0,0,.5)}
   .header{-webkit-user-select:none;user-select:none}
   button{touch-action:manipulation}
-  .header{background:linear-gradient(135deg,#0d3d6b,#185FA5 55%,#1a7a8a);color:#fff;padding:calc(env(safe-area-inset-top) + 20px) 18px 22px;border-radius:0 0 24px 24px;position:relative;flex-shrink:0}
+  .header{background:transparent;color:var(--ink);padding:calc(env(safe-area-inset-top) + 10px) 14px 4px;position:relative;flex-shrink:0;display:flex;align-items:center;z-index:20}
+  .hicons{margin-left:auto;display:flex;gap:4px}
+  .theme-btn{background:none;border:0;color:var(--ink);font-size:1.2rem;cursor:pointer;padding:6px;line-height:1;opacity:.72}
+  .theme-btn:active{opacity:1}
   .header h1{font-size:1.35rem;font-weight:600;display:flex;align-items:center;gap:.5rem}
   .header.withback h1,.header.withback p{padding-left:48px;transition:padding .15s}
   .header p{font-size:.82rem;opacity:.9;margin-top:2px}
-  .cfg-btn{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:16px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);border:0;color:#fff;font-size:1.2rem;cursor:pointer}
+  .cfg-btn{background:none;border:0;color:var(--ink);font-size:1.2rem;cursor:pointer;padding:6px;line-height:1;opacity:.72}
+  .cfg-btn:active{opacity:1}
   .wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;max-width:560px;width:100%;margin:0 auto;padding:16px 16px 90px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:14px}
   .card h2{font-size:1rem;font-weight:600;margin-bottom:.3rem}
   .sub{font-size:.85rem;color:var(--muted)}
   input.f{width:100%;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;outline:none;margin-bottom:10px}
   input.f:focus{border-color:var(--primary2)}
-  .btn{width:100%;border:0;background:linear-gradient(135deg,#185FA5,#1a7a8a);color:#fff;border-radius:12px;padding:13px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn{width:100%;border:0;background:var(--grad);color:#fff;border-radius:12px;padding:13px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}
   .btn.soft{background:var(--card2);color:var(--ink);border:1.5px solid var(--line)}
   .btn:disabled{opacity:.6}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
@@ -66,7 +80,8 @@
   .toast{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%) translateY(20px);background:#0a0f15;color:#fff;border:1px solid var(--line);padding:11px 18px;border-radius:999px;font-size:.9rem;opacity:0;transition:.25s;z-index:70;pointer-events:none}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   /* ---------- navegação seções ---------- */
-  .back-btn{position:absolute;top:calc(env(safe-area-inset-top) + 16px);left:16px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);border:0;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .back-btn{background:none;border:0;color:var(--ink);font-size:1.55rem;cursor:pointer;padding:0 6px;line-height:1;opacity:.8;margin-right:2px}
+  .back-btn:active{opacity:1}
   .sec-title{font-size:1.1rem;font-weight:600;margin:2px 0 12px;display:flex;align-items:center;gap:.5rem}
   .muted{color:var(--muted)}
   .row{display:flex;align-items:center;gap:10px}
@@ -85,10 +100,10 @@
   .mon-pp:first-of-type{border-top:0}
   .mon-refresh{width:auto!important;padding:8px 12px!important;margin:0!important;font-size:.82rem!important}
   .pill{border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:999px;padding:7px 14px;font-size:.82rem;cursor:pointer;font-family:inherit;white-space:nowrap}
-  .pill.on{background:linear-gradient(135deg,#185FA5,#1a7a8a);color:#fff;border-color:transparent}
+  .pill.on{background:var(--grad);color:#fff;border-color:transparent}
   .scroller{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
   .scroller::-webkit-scrollbar{display:none}
-  .fab{position:absolute;right:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#185FA5,#1a7a8a);color:#fff;border:0;font-size:1.6rem;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:40;display:flex;align-items:center;justify-content:center}
+  .fab{position:absolute;right:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);width:56px;height:56px;border-radius:50%;background:var(--grad);color:#fff;border:0;font-size:1.6rem;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:40;display:flex;align-items:center;justify-content:center}
   select.f{width:100%;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;outline:none;margin-bottom:10px}
   textarea.f{width:100%;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;outline:none;margin-bottom:10px;resize:vertical;min-height:64px}
   label.lbl{font-size:.78rem;color:var(--muted);display:block;margin:2px 2px 5px}
@@ -96,7 +111,7 @@
   .mini{background:none;border:0;color:var(--muted);font-size:.82rem;cursor:pointer;padding:1px 4px;vertical-align:middle}
   /* ---------- início ---------- */
   .countdown{text-align:center;padding:18px}
-  .countdown .big{font-size:3rem;font-weight:700;line-height:1;background:linear-gradient(135deg,#4aa3ff,#2fd0c6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .countdown .big{font-size:3rem;font-weight:700;line-height:1;color:var(--primary2);font-family:var(--fdisp)}
   .countdown .lbl{font-size:.85rem;color:var(--muted);margin-top:4px}
   .cd-cap{text-align:center;font-size:.82rem;color:var(--muted);margin-bottom:8px}
   .cd-wrap{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
@@ -122,7 +137,7 @@
   .res-val{font-size:1rem;font-weight:600;margin-top:2px;word-break:break-word;cursor:pointer;line-height:1.4}
   .res-val.muted{font-weight:400;font-size:.85rem;cursor:default}
   .bar{height:9px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:8px}
-  .bar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#185FA5,#1a7a8a)}
+  .bar > i{display:block;height:100%;border-radius:6px;background:var(--grad)}
   .kpi{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .kpi .k{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}
   .kpi .k .v{font-size:1.25rem;font-weight:700;margin-top:2px}
@@ -130,7 +145,7 @@
   /* ---------- roteiro ---------- */
   .dia{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-top:12px;overflow:hidden}
   .dia-head{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer}
-  .dia-n{width:38px;height:38px;flex:none;border-radius:11px;background:linear-gradient(135deg,#0d3d6b,#1a7a8a);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .dia-n{width:38px;height:38px;flex:none;border-radius:11px;background:var(--grad);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
   .dia-info{flex:1;min-width:0}
   .dia-d{font-size:.72rem;color:var(--muted)}
   .dia-t{font-weight:600;font-size:.92rem;margin-top:1px}
@@ -145,7 +160,7 @@
   .dia.open .dia-body{display:block}
   .dia-acts{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
   .actbtn{flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:10px;padding:9px;font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;text-decoration:none}
-  .actbtn.map{border-color:transparent;background:linear-gradient(135deg,#185FA5,#1a7a8a);color:#fff}
+  .actbtn.map{border-color:transparent;background:var(--grad);color:#fff}
   .aviso{display:flex;gap:8px;font-size:.78rem;color:var(--muted);background:rgba(210,83,63,.08);border:1px solid rgba(210,83,63,.25);border-radius:10px;padding:9px 11px;margin-bottom:8px;line-height:1.4}
   .stop{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
   .stop:first-child{border-top:0}
@@ -182,12 +197,12 @@
   .foco-sec{text-align:left;background:var(--card2);border-radius:12px;padding:11px 13px;margin-top:10px}
   .foco-sec-t{font-size:.82rem;font-weight:600}
   .foco-sec ul{margin:5px 0 0 16px;font-size:.8rem;color:var(--muted);line-height:1.55}
-  .foco-maps{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;padding:10px;border-radius:10px;background:linear-gradient(135deg,#185FA5,#1a7a8a);color:#fff;text-decoration:none;font-size:.88rem;font-weight:600}
+  .foco-maps{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;padding:10px;border-radius:10px;background:var(--grad);color:#fff;text-decoration:none;font-size:.88rem;font-weight:600}
   .foco-next{text-align:left;font-size:.82rem;color:var(--muted);margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
   .foco-next-l{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--primary2);margin-bottom:2px}
   .foco-bar{display:flex;gap:10px}
   .foco-bar button{flex:1;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:12px;padding:13px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}
-  .foco-bar button.pri{border-color:transparent;background:linear-gradient(135deg,#185FA5,#1a7a8a);color:#fff}
+  .foco-bar button.pri{border-color:transparent;background:var(--grad);color:#fff}
   .foco-bar button:disabled{opacity:.4}
   /* ---------- checklist ---------- */
   .clsec{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden}
@@ -278,15 +293,71 @@
   body.standalone{display:block;padding:0;background:var(--bg);min-height:0}
   body.standalone .phone{width:100%;max-width:none;height:100dvh;border:0;border-radius:0;box-shadow:none}
   body.standalone.locked{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+  /* ===== tipografia por tema ===== */
+  h1,h2,.tile .t{font-family:var(--fdisp)}
+  .fmono{font-family:var(--fmono)}
+  .sec-title{font-family:var(--fdisp);font-size:1.45rem;font-weight:700;margin:0 0 14px;letter-spacing:-.01em}
+  /* ===== HERÓI EMBARQUE (cartão de embarque) ===== */
+  .hero-emb{background:var(--header-bg);color:#fff;margin:0 -16px;padding:4px 18px 20px;border-radius:0 0 24px 24px}
+  .he-ey{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700}
+  .he-h1{font-family:var(--fdisp);font-size:1.55rem;font-weight:800;letter-spacing:.02em;text-transform:uppercase;margin-top:2px;color:#fff}
+  .he-sub{font-family:var(--fmono);font-size:.72rem;color:rgba(255,255,255,.66);margin-top:2px}
+  .bpass{background:#fff;color:#0F2A4A;border-radius:14px;padding:13px 15px;margin-top:14px;box-shadow:0 8px 20px rgba(0,0,0,.22)}
+  .bp-row{display:flex;justify-content:space-between;align-items:flex-end}
+  .bp-iata{font-family:var(--fdisp);font-size:1.8rem;font-weight:800;letter-spacing:.03em;line-height:.9}
+  .bp-arw{color:#C2413A;font-size:1.05rem;padding-bottom:4px}
+  .bp-city{font-size:.57rem;text-transform:uppercase;letter-spacing:.11em;color:#7d8ea0;margin-top:3px}
+  .bp-perf{border-top:2px dashed #cbd6e2;margin:11px -15px 9px;position:relative}
+  .bp-perf::before,.bp-perf::after{content:"";position:absolute;top:-9px;width:15px;height:15px;border-radius:50%;background:var(--header-bg)}
+  .bp-perf::before{left:-8px}.bp-perf::after{right:-8px}
+  .bp-lbl{font-size:.53rem;text-transform:uppercase;letter-spacing:.12em;color:#7d8ea0}
+  .bp-val{font-size:.84rem;margin-top:1px}
+  .bp-val.accent{color:#C2413A;font-weight:700}
+  .cd-txt{text-align:center;padding:26px 0 4px}
+  .cd-n{font-family:var(--fdisp);font-size:3.4rem;font-weight:800;line-height:.9;color:var(--ink)}
+  .cd-l{font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);margin-top:9px;font-weight:600}
+  .cd-perf{border-top:2px dashed var(--line);margin:26px 4px 22px}
+  /* ===== HERÓI PARIS ===== */
+  .hero-paris{position:relative;text-align:center;padding:4px 4px 2px}
+  .eiffel{position:absolute;top:38px;left:50%;transform:translateX(-50%);width:140px;opacity:.14;pointer-events:none;z-index:0}
+  .eiffel svg{display:block;width:100%;filter:drop-shadow(0 0 5px rgba(228,184,90,.45))}
+  .hp-in{position:relative;z-index:1}
+  .hp-ey{font-family:'Cormorant Garamond',serif;font-size:1rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent)}
+  .hp-h1{font-family:var(--fdisp);font-size:2.7rem;font-weight:600;line-height:.98;margin-top:2px;color:var(--ink)}
+  .hp-sub{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--muted);margin-top:5px;letter-spacing:.05em}
+  .hp-orn{color:var(--accent);letter-spacing:.4em;font-size:.75rem;margin-top:10px}
+  .p-mon{background:var(--card);border:1px solid var(--accent);border-radius:16px;padding:15px;text-align:center;margin-top:16px;position:relative;z-index:1}
+  .p-mon .l{font-family:'Cormorant Garamond',serif;font-size:.95rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  .p-mon .v{font-family:var(--fdisp);font-size:1.7rem;font-weight:600;margin-top:3px;color:var(--ink)}
+  .p-mon .s{font-family:'Inter',sans-serif;font-size:.72rem;color:var(--muted);margin-top:4px}
+  .p-rule{height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.55;margin:22px 8px}
+  /* ===== LISTA — Minhas viagens (Brasil clean) ===== */
+  .hub-head{padding:6px 4px 2px}
+  .hub-head h1{font-family:var(--fdisp);font-size:1.72rem;font-weight:700;letter-spacing:-.01em}
+  .hub-head .s{color:var(--muted);font-size:.82rem;margin-top:3px}
+  .flagline{height:3px;border-radius:3px;background:linear-gradient(90deg,#1E8A5A 0 55%,#E8B93B 55% 100%);opacity:.9;margin:12px 0 2px;width:46px}
+  .trips2{display:flex;flex-direction:column;gap:11px;margin-top:14px}
+  .tcard{display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;text-align:left;width:100%;font-family:inherit;color:var(--ink);cursor:pointer}
+  .tcard:active{background:var(--card2)}
+  .tcard .dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .tcard .tm{flex:1;min-width:0;display:flex;flex-direction:column}
+  .tcard .tcity{font-family:var(--fdisp);font-size:1.2rem;font-weight:700;line-height:1.05}
+  .tcard .twhen{color:var(--muted);font-size:.74rem;margin-top:3px;font-family:var(--fmono)}
+  .tcard .tst{font-size:.72rem;font-weight:600;white-space:nowrap}
+  .tcard .tgo{color:var(--muted);opacity:.6;font-size:1.2rem}
+  .newv{margin-top:4px;border:1px solid var(--line);background:var(--card);color:var(--primary);border-radius:13px;padding:13px;font-weight:600;font-family:inherit;cursor:pointer;font-size:.9rem;width:100%}
 </style>
 </head>
 <body>
   <div class="phone">
   <div class="header">
-    <button class="cfg-btn" id="cfgBtn" aria-label="Configurações">⚙️</button>
     <button class="back-btn" id="backBtn" aria-label="Voltar" style="display:none" onclick="VUI.back()">‹</button>
-    <h1>🧳 Viagem</h1>
-    <p id="hsub">Nosso planejamento</p>
+    <h1 style="display:none">🧳 Viagem</h1>
+    <p id="hsub" style="display:none">Nosso planejamento</p>
+    <div class="hicons">
+      <button class="theme-btn" id="themeBtn" aria-label="Tema claro/escuro" onclick="VUI.tema()">🌙</button>
+      <button class="cfg-btn" id="cfgBtn" aria-label="Configurações">⚙️</button>
+    </div>
   </div>
   <div class="wrap"><div id="app"></div></div>
 
@@ -324,12 +395,41 @@
     if(b)return 'até '+b.d+'/'+b.m+'/'+b.y;
     return '';}
   function diaData(d){var s=VIA.get('data',null);if(!s)return '';var dt=new Date(s+'T12:00:00');if(isNaN(dt))return '';dt.setDate(dt.getDate()+((parseInt(d,10)||1)-1));return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2);}
+  /* ===== TEMA POR VIAGEM ===== */
+  function tripTheme(){if(!espacoId)return 'brasil';return /paris/i.test(espacoNome||'')?'paris':'embarque';}
+  function themeDefault(t){return t==='paris'?'dark':'light';}
+  function curTheme(t){var p=null;try{p=localStorage.getItem('via_th_'+t);}catch(e){}return (p==='light'||p==='dark')?p:themeDefault(t);}
+  function updThemeBtn(){var b=document.getElementById('themeBtn');if(!b)return;b.textContent=(document.documentElement.getAttribute('data-theme')==='dark')?'☀️':'🌙';}
+  function applyTheme(){var t=tripTheme();document.documentElement.setAttribute('data-trip',t);document.documentElement.setAttribute('data-theme',curTheme(t));updThemeBtn();}
+  var EIFFEL_SVG='<svg viewBox="0 0 120 300" fill="none" stroke="#E4B85A" stroke-width="1.6" stroke-linecap="round"><line x1="60" y1="6" x2="60" y2="30"/><path d="M60 30 C55 70 52 90 51 104 C48 150 42 175 40 196 C34 245 24 272 12 298"/><path d="M60 30 C65 70 68 90 69 104 C72 150 78 175 80 196 C86 245 96 272 108 298"/><line x1="51" y1="104" x2="69" y2="104"/><line x1="40" y1="196" x2="80" y2="196"/><path d="M20 298 Q60 258 100 298"/><line x1="51" y1="104" x2="40" y2="196"/><line x1="69" y1="104" x2="80" y2="196"/><line x1="60" y1="30" x2="60" y2="196"/></svg>';
+  function embarqueHero(){
+    var v=dVoos(), ida=(v&&v.ida)?v.ida:[], pass='';
+    if(ida.length){var a=ida[0], b=ida[ida.length-1];var emb=((a.data||'')+(a.saida?' · '+a.saida:'')).trim();var loc=b.loc||a.loc||'';
+      pass='<div class="bpass"><div class="bp-row"><span class="bp-iata">'+esc(a.dep||'')+'</span><span class="bp-arw">✈</span><span class="bp-iata">'+esc(b.arr||'')+'</span></div>'+
+        '<div class="bp-row"><span class="bp-city">'+esc(a.de||'')+'</span><span class="bp-city">'+esc(b.para||'')+'</span></div>'+
+        '<div class="bp-perf"></div><div class="bp-row"><div><div class="bp-lbl">Embarque</div><div class="bp-val fmono">'+esc(emb||'—')+'</div></div>'+
+        (loc?'<div style="text-align:right"><div class="bp-lbl">Localizador</div><div class="bp-val fmono accent">'+esc(loc)+'</div></div>':'')+'</div></div>';}
+    var cd='', tgt=cdTarget();
+    if(tgt){var diff=tgt-new Date();if(diff>0){var d=Math.ceil(diff/86400000);cd='<div class="cd-txt"><div class="cd-n">'+d+'</div><div class="cd-l">dias para o embarque</div></div>';}
+      else cd='<div class="cd-txt"><div class="cd-l" style="font-size:.95rem;color:var(--ink)">Viagem em andamento ✈️</div></div>';}
+    var dr=heroDateRange();
+    return '<div class="hero-emb"><div class="he-ey">Boarding pass</div><div class="he-h1">'+esc(cidade(espacoNome))+'</div>'+(dr?'<div class="he-sub">'+esc(dr.toUpperCase())+'</div>':'')+pass+'</div>'+cd+'<div class="cd-perf"></div>';
+  }
+  function heroDateRange(){return fmtPeriodo(VIA.get('data',null),VIA.get('data_fim',null))||'';}
+  function parisHero(){
+    return '<div class="hero-paris"><div class="eiffel">'+EIFFEL_SVG+'</div><div class="hp-in">'+
+      '<div class="hp-ey">Pré-wedding</div><div class="hp-h1">'+esc(cidade(espacoNome))+'</div>'+
+      '<div class="hp-sub">Diego &amp; Débora · 2027</div><div class="hp-orn">✦ ✦ ✦</div></div>'+
+      '<div class="p-mon"><div class="l">Monitorando voos</div><div class="v">📡 ao vivo</div><div class="s">acompanhe o menor preço na aba Monitor — atualiza sozinho todo dia</div></div>'+
+      '</div><div class="p-rule"></div>';
+  }
+  function homeHero(){return tripTheme()==='paris'?parisHero():embarqueHero();}
   var toastT=null;
   function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2000);}
 
   /* ---------- tema ---------- */
-  function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('via_theme',t);}catch(e){}renderCfg();}
-  function initTheme(){var t='dark';try{t=localStorage.getItem('via_theme')||'dark';}catch(e){}document.documentElement.setAttribute('data-theme',t);}
+  function setTheme(t){var trip=tripTheme();try{localStorage.setItem('via_th_'+trip,t);}catch(e){}applyTheme();renderCfg();render();}
+  function initTheme(){applyTheme();}
 
   /* ---------- atualizar app ---------- */
   async function updateApp(){
@@ -1190,13 +1290,21 @@
   function renderTrips(){
     var lista;
     if(espacos.length){
-      lista='<div class="trips">'+espacos.map(function(e){
+      lista='<div class="trips2">'+espacos.map(function(e){
         var per=fmtPeriodo(e.dataInicio,e.dataFim);
-        return '<button class="trip-row" onclick="VUI.abrir(\''+e.id+'\')"><span class="trip-ic">🧳</span><span class="trip-main"><span class="trip-nm">'+esc(cidade(e.nome))+'</span><span class="trip-dt">'+(per?('📅 '+esc(per)):'datas a definir')+'</span></span>'+statusChip(e.status)+'<span class="trip-go">›</span></button>';
+        var isParis=/paris/i.test(e.nome||'');
+        var dot=isParis?'#2E4C8A':'#123a63';
+        var mon=(e.status==='Monitoramento');
+        var stlbl=mon?'Monitorando':(e.status||'Planejando');
+        var stcol=mon?'#c79a2e':'#1E8A5A';
+        return '<button class="tcard" onclick="VUI.abrir(\''+e.id+'\')"><span class="dot" style="background:'+dot+'"></span>'+
+          '<span class="tm"><span class="tcity">'+esc(cidade(e.nome))+'</span><span class="twhen">'+(per?esc(per):'datas a definir')+'</span></span>'+
+          '<span class="tst" style="color:'+stcol+'">'+esc(stlbl)+'</span><span class="tgo">›</span></button>';
       }).join('')+'</div>';
     } else lista='<div class="empty">Você ainda não tem viagens.<br>Toque no + para criar a primeira.</div>';
-    return lista+
-      '<div style="text-align:center;margin-top:24px"><button class="linkbtn" onclick="VUI.joinForm()">🔑 Entrar com um código de convite</button></div>';
+    var n=espacos.length;
+    return '<div class="hub-head"><h1>Minhas viagens</h1><div class="s">'+(n?n+(n===1?' viagem':' viagens')+' · toque para abrir':'sua primeira viagem começa aqui')+'</div></div><div class="flagline"></div>'+lista+
+      '<div style="text-align:center;margin-top:20px"><button class="linkbtn" onclick="VUI.joinForm()">🔑 Entrar com um código de convite</button></div>';
   }
   function joinForm(){
     openSheet('<h2 style="font-size:1.05rem;margin-bottom:6px">🔑 Entrar com código</h2><div class="sub" style="margin-bottom:12px">Alguém te passou um código de convite? Digite abaixo.</div>'+
@@ -1215,6 +1323,7 @@
     var app=$('#app');
     var back=$('#backBtn'), fab=$('#fab'), hdr=$('.header');
     if(back)back.style.display='none';if(fab)fab.style.display='none';if(hdr)hdr.classList.remove('withback');
+    applyTheme();
     if(!user){
       $('#hsub').textContent='Entre na sua conta';
       app.innerHTML='<div class="card"><h2>🔐 Entrar na sua conta</h2><div class="sub" style="margin-bottom:12px">E-mail e senha. A mesma conta da suíte.</div>'+
@@ -1236,12 +1345,14 @@
       var secs=SECOES.slice();
       if(dMeta().status==='Monitoramento')secs.splice(1,0,['📡','Monitoramento','voos & orçamento ao vivo','monitor']);
       var tiles=secs.map(function(s){return '<div class="tile" onclick="VUI.go(\''+s[3]+'\')"><div class="ic">'+s[0]+'</div><div class="t">'+esc(s[1])+'</div><div class="s">'+esc(s[2])+'</div></div>';}).join('');
-      app.innerHTML='<div class="grid">'+tiles+'</div>';
+      app.innerHTML=homeHero()+'<div class="grid">'+tiles+'</div>';
       return;
     }
     // seção
     if(back)back.style.display='flex';if(hdr)hdr.classList.add('withback');
     $('#hsub').textContent=(SEC_TITLES[view]||'').replace(/^\S+\s/,'');
+    var _noTitle={mapa:1,restaurantes:1,monitor:1};
+    var _stitle=_noTitle[view]?'':'<div class="sec-title">'+esc(SEC_TITLES[view]||'')+'</div>';
     var html='';
     if(view==='inicio')html=renderInicio();
     else if(view==='roteiro')html=renderRoteiro();
@@ -1251,13 +1362,14 @@
     else if(view==='gastos')html=renderGastos();
     else if(view==='documentos')html=renderDocumentos();
     else if(view==='monitor')html=renderMonitor();
-    app.innerHTML=html;
+    app.innerHTML=_stitle+html;
     if(SEC_FAB[view]&&fab){fab.style.display='flex';}
   }
 
   /* ================= AÇÕES (globais p/ onclick) ================= */
   window.VUI={
     go:function(v){view=v;render();window.scrollTo(0,0);},
+    tema:function(){var t=tripTheme(),nx=(curTheme(t)==='dark')?'light':'dark';try{localStorage.setItem('via_th_'+t,nx);}catch(e){}applyTheme();render();},
     home:function(){view='home';render();window.scrollTo(0,0);},
     back:function(){if(view!=='home'){view='home';render();}else{espacoId=null;espacoNome='';dados={};view='home';render();}window.scrollTo(0,0);},
     abrir:function(id){abrirViagem(id);},
