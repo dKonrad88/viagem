@@ -27,6 +27,9 @@
   /* ===== PARIS — nuit + Eiffel ===== */
   :root[data-trip="paris"]{--bg:#EEF1F6;--card:#ffffff;--card2:#e7ecf3;--ink:#14213D;--muted:#6b7690;--line:#dde3ec;--primary:#2E4C8A;--primary2:#B08D52;--primary-d:#20386a;--accent:#B08D52;--grad:linear-gradient(135deg,#2E4C8A,#3a5fa8);--fdisp:'Playfair Display',Georgia,serif}
   :root[data-trip="paris"][data-theme="dark"]{--bg:#0F1B33;--card:#16264a;--card2:#1b2e57;--ink:#EAEFF7;--muted:#9fb0cf;--line:#294269;--primary:#4A6FB0;--primary2:#E4B85A;--primary-d:#0e1c38;--accent:#E4B85A;--grad:linear-gradient(135deg,#2E4C8A,#4A6FB0)}
+  /* ===== TRABALHO — viagem curta/executiva (grafite + cobalto) ===== */
+  :root[data-trip="trabalho"]{--bg:#F2F4F7;--card:#ffffff;--card2:#EAEEF3;--ink:#1A2028;--muted:#6B7686;--line:#E1E6ED;--primary:#22303F;--primary2:#2F6FED;--primary-d:#161f29;--accent:#2F6FED;--grad:linear-gradient(135deg,#22303F,#31465E);--fdisp:'Inter',sans-serif;--fmono:'Space Mono',ui-monospace,monospace}
+  :root[data-trip="trabalho"][data-theme="dark"]{--bg:#0E1319;--card:#161D26;--card2:#1D2733;--ink:#E7ECF2;--muted:#8C99A8;--line:#26313E;--primary:#E7ECF2;--primary2:#5E93FF;--primary-d:#0a0e13;--accent:#5E93FF;--grad:linear-gradient(135deg,#2b3d52,#22303F)}
   *{box-sizing:border-box;margin:0;padding:0}
   html{height:100%}
   body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:radial-gradient(900px 600px at 50% -10%,rgba(255,255,255,.05),transparent 60%),#0a0d12;color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;touch-action:manipulation;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:14px}
@@ -34,7 +37,7 @@
   .header{-webkit-user-select:none;user-select:none}
   button{touch-action:manipulation}
   .header{background:transparent;color:var(--ink);padding:calc(env(safe-area-inset-top) + 10px) 14px 4px;position:relative;flex-shrink:0;display:flex;align-items:center;z-index:20}
-  .hicons{margin-left:auto;display:flex;gap:4px}
+  .hicons{margin-left:auto;display:flex;gap:8px}
   .theme-btn{background:none;border:0;color:var(--ink);font-size:1.2rem;cursor:pointer;padding:6px;line-height:1;opacity:.72}
   .theme-btn:active{opacity:1}
   .header h1{font-size:1.35rem;font-weight:600;display:flex;align-items:center;gap:.5rem}
@@ -351,6 +354,88 @@
   .tcard .tst{font-size:.72rem;font-weight:600;white-space:nowrap}
   .tcard .tgo{color:var(--muted);opacity:.6;font-size:1.2rem}
   .newv{margin-top:4px;border:1px solid var(--line);background:var(--card);color:var(--primary);border-radius:13px;padding:13px;font-weight:600;font-family:inherit;cursor:pointer;font-size:.9rem;width:100%}
+  /* ================= MALA (montador) ================= */
+  .stp{display:flex;align-items:center;gap:14px;margin-top:10px}
+  .stp>button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);font-size:1.15rem;line-height:1;font-weight:600;font-family:inherit;cursor:pointer;flex:none}
+  .stp .n{font-family:var(--fmono);font-size:2rem;font-weight:700;min-width:52px;text-align:center;letter-spacing:-1px;line-height:1.05}
+  .stp .nu{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;text-align:center}
+  .step-l{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:7px}
+  .step-n{width:18px;height:18px;border-radius:50%;background:var(--primary);color:var(--card);font-size:.68rem;display:inline-flex;align-items:center;justify-content:center;font-family:var(--fmono);letter-spacing:0;flex:none}
+  .step-sum{margin-left:auto;font-family:var(--fmono);font-size:.72rem;color:var(--accent);letter-spacing:0}
+  .mini-l{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:14px}
+  .seg{display:flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin-top:8px}
+  .seg>div{flex:1;text-align:center;padding:8px 2px;font-size:.8rem;color:var(--muted);border-left:1px solid var(--line);line-height:1.2;cursor:pointer}
+  .seg>div:first-child{border-left:0}
+  .seg>div.on{background:var(--primary);color:var(--card);font-weight:600}
+  .seg small{display:block;font-size:.62rem;opacity:.75}
+  .trow{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--line)}
+  .trow:first-of-type{border-top:0}
+  .tic{width:32px;height:32px;border-radius:9px;background:var(--card2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1rem;flex:none}
+  .trow.on .tic{background:var(--primary);border-color:var(--primary)}
+  .tnm{flex:1;min-width:0}
+  .tnm .a{font-size:.91rem;font-weight:500}
+  .tnm .b{font-size:.71rem;color:var(--muted);line-height:1.35}
+  .qs{display:flex;align-items:center;gap:7px;flex:none}
+  .qs button{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--card2);color:var(--muted);font-size:.95rem;line-height:1;font-family:inherit;cursor:pointer}
+  .qs .v{font-family:var(--fmono);font-weight:700;font-size:1rem;min-width:20px;text-align:center}
+  .qs .v.z{opacity:.35}
+  .qs .v.ed{color:var(--accent)}
+  .mnote{display:flex;gap:7px;font-size:.75rem;color:var(--muted);margin-top:9px;background:var(--card2);border-radius:9px;padding:7px 10px;line-height:1.4}
+  .mnote.ok{color:var(--ok);background:rgba(31,157,99,.1);border:1px solid rgba(31,157,99,.28);font-weight:600}
+  .foldl{font-size:.75rem;color:var(--muted);margin-top:9px;display:flex;align-items:center;gap:5px;cursor:pointer;-webkit-user-select:none;user-select:none}
+  .foldl .fchev{font-size:.75rem;opacity:.8;transition:transform .15s}
+  .foldb{display:none;font-size:.75rem;color:var(--muted);line-height:1.55;margin-top:6px}
+  .foldb b{color:var(--ink);font-weight:500}
+  .fold.open .foldb{display:block}
+  .fold.open .fchev{transform:rotate(180deg)}
+  .addlink{padding:10px 0 2px;font-size:.85rem;color:var(--accent);font-weight:600;border-top:1px solid var(--line);margin-top:4px;cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;font-family:inherit}
+  .mbtn-s{display:block;font-size:.73rem;font-weight:400;opacity:.78;margin-top:3px;line-height:1.35}
+  /* cabeçalho do resultado */
+  .rhead{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px;margin-top:2px}
+  .rh-top{display:flex;align-items:baseline;justify-content:space-between}
+  .rh-d{font-family:var(--fmono);font-size:1.5rem;font-weight:700}
+  .rh-d small{font-size:.78rem;font-weight:400;color:var(--muted);font-family:inherit}
+  .rh-e{font-size:.75rem;color:var(--accent);font-weight:600;background:none;border:0;font-family:inherit;cursor:pointer}
+  .rchips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+  .rchip{font-size:.71rem;padding:3px 9px;border-radius:99px;background:var(--card2);border:1px solid var(--line);color:var(--muted);font-weight:500}
+  .mprog{margin-top:11px}
+  .mprog-h{display:flex;justify-content:space-between;align-items:baseline;font-size:.8rem;color:var(--muted)}
+  .mprog-h b{color:var(--ink);font-size:.93rem;font-family:var(--fmono)}
+  .mbar{height:7px;border-radius:99px;background:var(--card2);margin-top:6px;overflow:hidden;border:1px solid var(--line)}
+  .mbar i{display:block;height:100%;background:var(--grad);border-radius:99px;transition:width .2s}
+  /* grupos e itens */
+  .mgrp{margin-top:16px}
+  .mgrp-h{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .mgrp-t{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;font-weight:700}
+  .mgrp-c{font-size:.71rem;color:var(--muted);font-family:var(--fmono)}
+  .mgrp-a{margin-left:auto;font-size:.74rem;color:var(--accent);font-weight:600;background:none;border:0;font-family:inherit;cursor:pointer}
+  .mlist{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .mit{display:flex;align-items:center;gap:11px;padding:9px 13px;border-top:1px solid var(--line)}
+  .mit:first-child{border-top:0}
+  .mit .mbox{width:21px;height:21px;border-radius:6px;border:1.7px solid var(--line);background:var(--card2);flex:none;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--card);cursor:pointer}
+  .mit.on .mbox{background:var(--primary);border-color:var(--primary)}
+  .mit.on .mnm{color:var(--muted);text-decoration:line-through}
+  .mnm{flex:1;font-size:.91rem;min-width:0}
+  .mnm small{display:block;font-size:.68rem;color:var(--muted);text-decoration:none;line-height:1.35}
+  .mnm small.mix{color:var(--accent)}
+  .mq{font-family:var(--fmono);font-size:.87rem;font-weight:700;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:3px 9px;flex:none}
+  .msub{padding:6px 13px;background:var(--card2);font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--muted);border-top:1px solid var(--line)}
+  .mrow-x{background:none;border:0;color:var(--muted);opacity:.45;font-size:.95rem;cursor:pointer;padding:2px 0 2px 4px;flex:none;font-family:inherit}
+  .mundo{font-size:.78rem;color:var(--muted);text-align:center;margin-top:12px;background:none;border:0;font-family:inherit;width:100%;cursor:pointer}
+  .kbrow{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .kbrow .kn{flex:1;font-size:.9rem}
+  .rgrow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .rgrow .rgn{flex:1;font-size:.88rem}
+  /* herói do tema trabalho */
+  .hero-trab{padding:6px 2px 2px}
+  .ht-ey{font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .ht-h1{font-family:var(--fdisp);font-size:2rem;font-weight:700;letter-spacing:-.02em;line-height:1.08;margin-top:3px}
+  .ht-sub{font-family:var(--fmono);font-size:.78rem;color:var(--muted);margin-top:4px}
+  .hw-mala{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px;margin-top:14px;cursor:pointer}
+  .hw-l{display:flex;justify-content:space-between;align-items:baseline;font-size:.88rem;font-weight:600;margin-bottom:7px}
+  .hw-l .fmono{font-family:var(--fmono);color:var(--muted);font-weight:700;font-size:.82rem}
+  .rgrow input{width:52px;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:8px;padding:6px;font-size:.9rem;font-family:var(--fmono);text-align:center}
+  .rglbl{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;text-align:center}
 </style>
 </head>
 <body>
@@ -401,7 +486,10 @@
     return '';}
   function diaData(d){var s=VIA.get('data',null);if(!s)return '';var dt=new Date(s+'T12:00:00');if(isNaN(dt))return '';dt.setDate(dt.getDate()+((parseInt(d,10)||1)-1));return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2);}
   /* ===== TEMA POR VIAGEM ===== */
-  function tripTheme(){if(!espacoId)return 'brasil';return /paris/i.test(espacoNome||'')?'paris':'embarque';}
+  var TEMAS={brasil:1,embarque:1,paris:1,trabalho:1};
+  function tripTheme(){if(!espacoId)return 'brasil';
+    var t=dMeta().tema;if(t&&TEMAS[t])return t;
+    return /paris/i.test(espacoNome||'')?'paris':'embarque';}
   function themeDefault(t){return t==='paris'?'dark':'light';}
   function curTheme(t){var p=null;try{p=localStorage.getItem('via_th_'+t);}catch(e){}return (p==='light'||p==='dark')?p:themeDefault(t);}
   function updThemeBtn(){var b=document.getElementById('themeBtn');if(!b)return;b.textContent=(document.documentElement.getAttribute('data-theme')==='dark')?'☀️':'🌙';}
@@ -428,7 +516,19 @@
       '<div class="p-mon"><div class="l">Monitorando voos</div><div class="v">📡 ao vivo</div><div class="s">acompanhe o menor preço na aba Monitor — atualiza sozinho todo dia</div></div>'+
       '</div><div class="p-rule"></div>';
   }
-  function homeHero(){return tripTheme()==='paris'?parisHero():embarqueHero();}
+  function trabalhoHero(){
+    var dr=heroDateRange(), p=malaProgHome();
+    var barra='';
+    if(p&&p.tot){var pct=Math.round(p.ok/p.tot*100);
+      barra='<div class="hw-mala" onclick="VUI.go(\'mala\')"><div class="hw-l"><span>🎒 Mala</span><span class="fmono">'+p.ok+' de '+p.tot+'</span></div>'+
+        '<div class="mbar"><i style="width:'+pct+'%"></i></div></div>';}
+    else barra='<div class="hw-mala" onclick="VUI.go(\'mala\')"><div class="hw-l"><span>🎒 Montar a mala</span><span>›</span></div>'+
+        '<div class="sub" style="font-size:.75rem;margin-top:3px">responda 4 perguntas e ela se monta</div></div>';
+    return '<div class="hero-trab"><div class="ht-ey">Viagem de trabalho</div>'+
+      '<div class="ht-h1">'+esc(cidade(espacoNome))+'</div>'+
+      (dr?'<div class="ht-sub">'+esc(dr)+'</div>':'')+barra+'</div>';
+  }
+  function homeHero(){var t=tripTheme();return t==='paris'?parisHero():(t==='trabalho'?trabalhoHero():embarqueHero());}
   var toastT=null;
   function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2000);}
 
@@ -511,7 +611,7 @@
   }
   async function abrirViagem(id){
     espacoId=id; var e=espacos.filter(function(x){return x.id===id;})[0];
-    espacoNome=(e&&e.nome)||'Viagem'; view='home';
+    espacoNome=(e&&e.nome)||'Viagem'; view='home'; malaWiz=null;
     await carregarDados(); render(); window.scrollTo(0,0);
   }
   async function gerarConvite(){
@@ -578,7 +678,8 @@
 
   /* ================= TELAS DA VIAGEM ================= */
   var view='home', focoState={diaIdx:0,stopIdx:0};
-  var SECOES=[['🏠','Início','resumo da viagem','inicio'],['🗺️','Roteiro','o dia a dia','roteiro'],['📍','Mapa','tudo no mapa','mapa'],['🍴','Restaurantes','comer & cafés','restaurantes'],['🧳','Checklist','malas e compras','checklist'],['💸','Gastos','orçamento','gastos'],['📄','Documentos','passagens, reservas','documentos']];
+  var SECOES=[['🏠','Início','resumo da viagem','inicio'],['🗺️','Roteiro','o dia a dia','roteiro'],['📍','Mapa','tudo no mapa','mapa'],['🍴','Restaurantes','comer & cafés','restaurantes'],['🎒','Mala','o que levar','mala'],['🧳','Checklist','malas e compras','checklist'],['💸','Gastos','orçamento','gastos'],['📄','Documentos','passagens, reservas','documentos']];
+  var SEC_OFF_TRAB={mapa:1,restaurantes:1};
   var STATUS_LIST=['Planejando','Monitoramento','Confirmada','Concluída'];
   var STATUS_META={'Planejando':{ic:'📝',cls:'st-plan'},'Monitoramento':{ic:'📡',cls:'st-mon'},'Confirmada':{ic:'✅',cls:'st-conf'},'Concluída':{ic:'🏁',cls:'st-done'}};
   function statusChip(s){var m=STATUS_META[s];if(!m)return '';return '<span class="chip status-chip '+m.cls+'">'+m.ic+' '+esc(s)+'</span>';}
@@ -612,7 +713,7 @@
   function saveCheck(data){VIA.set(clKey(),data);}
   function dGastos(){var g=VIA.get('gastos',null);return Array.isArray(g)?g:[];}
   function dDocs(){var d=VIA.get('documentos',null);return Array.isArray(d)?d:[];}
-  function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5,status:STATUS_META[m.status]?m.status:'Planejando'};return{total:80000,cambio:5,status:'Planejando'};}
+  function dMeta(){var m=VIA.get('meta',null);if(m&&typeof m==='object')return{total:m.total||80000,cambio:m.cambio||5,status:STATUS_META[m.status]?m.status:'Planejando',tema:m.tema||null};return{total:80000,cambio:5,status:'Planejando',tema:null};}
   function tripStart(){var d=VIA.get('data',null);return (typeof d==='string'&&d)?d:null;}
   function dVoos(){var v=VIA.get('voos',null);return (v&&typeof v==='object'&&(v.ida||v.volta))?v:null;}
   function cdTarget(){var v=dVoos();if(v&&v.partida){var t=new Date(v.partida);if(!isNaN(t))return t;}var ts=tripStart();if(ts){var d=new Date(ts+'T00:00:00');if(!isNaN(d))return d;}return null;}
@@ -679,8 +780,18 @@
     if(ts){var ini=new Date(ts+'T00:00:00');if(!isNaN(ini)){var d0=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate());dias=daysBetween(d0,hojeMeia());}}
     var totalG=dGastos().reduce(function(a,g){return a+toReais(g.valor,g.moeda);},0);
     var meta=dMeta().total, pct=meta?Math.min(100,Math.round(totalG/meta*100)):0;
+    var trab=(tripTheme()==='trabalho');
     var cd, tgt=cdTarget(), tdiff=tgt?(tgt-new Date()):null;
-    if(idxHoje>=0)cd='<div class="card"><div class="countdown"><div class="big">'+(idxHoje+1)+'</div><div class="lbl">de '+rt.length+' — você está na viagem! 🎉</div></div></div>';
+    if(trab){
+      var p=malaProgHome();
+      cd=p&&p.tot
+        ? '<div class="card"><div class="row between" style="margin-bottom:8px"><h2>🎒 Mala</h2><span class="sub">'+p.ok+' de '+p.tot+' itens</span></div>'+
+          '<div class="mbar"><i style="width:'+(p.tot?Math.round(p.ok/p.tot*100):0)+'%"></i></div>'+
+          '<button class="btn soft" style="margin-top:12px" onclick="VUI.go(\'mala\')">Abrir a mala</button></div>'
+        : '<div class="card"><h2>🎒 Mala</h2><div class="sub" style="margin-top:4px">Diga quantos dias você fica fora e o que vai fazer — a lista se monta.</div>'+
+          '<button class="btn" style="margin-top:12px" onclick="VUI.go(\'mala\')">Montar a mala</button></div>';
+    }
+    else if(idxHoje>=0)cd='<div class="card"><div class="countdown"><div class="big">'+(idxHoje+1)+'</div><div class="lbl">de '+rt.length+' — você está na viagem! 🎉</div></div></div>';
     else if(!tgt)cd='<div class="card"><div class="countdown"><div class="big">🗓️</div><div class="lbl">sem data de início definida</div></div><button class="btn soft" style="margin-top:6px" onclick="VUI.dataForm()">Definir data de início</button></div>';
     else if(tdiff>0)cd='<div class="card"><div class="cd-cap">✈️ Faltam para embarcar</div><div class="cd-wrap" id="cdTick">'+countdownHTML()+'</div></div>';
     else if(dias!==null&&rt.length&&dias>=rt.length)cd='<div class="card"><div class="countdown"><div class="big">✓</div><div class="lbl">viagem concluída</div></div></div>';
@@ -689,6 +800,12 @@
     if(idxHoje>=0){var dh=rt[idxHoje],si=stopAtual(idxHoje),st=dh.stops&&dh.stops[si];prox='<div class="card"><div class="row between"><h2>Agora no roteiro</h2><span class="chip">Dia '+esc(dh.dia)+'</span></div>'+(st?'<div class="sub" style="margin-top:6px">'+esc(st.icone||'📍')+' <b>'+esc(st.titulo)+'</b>'+(st.hora?' · '+esc(st.hora):'')+'</div>':'')+'<button class="btn" style="margin-top:12px" onclick="VUI.focoAgora()">▶ Abrir Modo Foco</button></div>';}
     else if(rt.length&&rt[0]){var pd=rt[0];prox='<div class="card"><div class="row between"><h2>Primeiro dia</h2><span class="chip">Dia '+esc(pd.dia)+'</span></div><div class="sub" style="margin-top:4px">'+(pd.data?esc(pd.data)+' — ':'')+esc(pd.titulo||'')+'</div><button class="btn soft" style="margin-top:12px" onclick="VUI.go(\'roteiro\')">Ver roteiro completo</button></div>';}
     var rotSub=rt.length?'Seu dia a dia da viagem.':'Ainda sem roteiro — toque para montar o seu.';
+    if(trab)return cd+prox+
+      '<div class="card"><div class="row between" style="margin-bottom:8px"><h2>💸 Gastos</h2><span class="sub">'+pct+'% da meta</span></div>'+
+        '<div class="kpi"><div class="k"><div class="l">Gasto até agora</div><div class="v">'+money(totalG)+'</div></div><div class="k"><div class="l">Meta</div><div class="v">'+money(meta)+'</div></div></div>'+
+        '<div class="bar" style="margin-top:12px"><i style="width:'+pct+'%"></i></div>'+
+        '<button class="btn soft" style="margin-top:12px" onclick="VUI.go(\'gastos\')">Ver gastos</button></div>'+
+      '<div class="card"><div class="row between"><h2>🗺️ Compromissos</h2><span class="chip">'+rt.length+(rt.length===1?' dia':' dias')+'</span></div><div class="sub" style="margin-top:4px">'+rotSub+'</div><button class="btn soft" style="margin-top:12px" onclick="VUI.go(\'roteiro\')">Abrir roteiro</button></div>';
     return cd+voosCard()+reservasCard()+
       prox+
       '<div class="card"><div class="row between" style="margin-bottom:8px"><h2>💸 Gastos</h2><span class="sub">'+pct+'% da meta</span></div>'+
@@ -884,6 +1001,361 @@
         '<div class="cladd"><input placeholder="+ adicionar item" onkeydown="VUI.clAdd(event,\''+clPanel+'\',\''+sec.id+'\')"></div></div></div>';
     }).join('');
     return mine+tabs+body+'<div class="card"><button class="btn soft" onclick="VUI.secForm()">＋ Nova seção</button></div>';
+  }
+
+  /* ================= MALA — montador inteligente ================= */
+  var MALA_FIX_DEF=[
+    {id:'mf1',nome:'Escova + pasta de dente',qtd:1},{id:'mf2',nome:'Desodorante',qtd:1},
+    {id:'mf3',nome:'Shampoo / sabonete',qtd:1},{id:'mf4',nome:'Aparelho de barbear',qtd:1},
+    {id:'mf5',nome:'Pijama',qtd:1},{id:'mf6',nome:'Chinelo',qtd:1},
+    {id:'mf7',nome:'Carregador + cabo',qtd:1},{id:'mf8',nome:'Fone de ouvido',qtd:1},
+    {id:'mf9',nome:'Documento + carteira',qtd:1}
+  ];
+  /* [chave, ícone, nome, o que acrescenta, eixo de roupa, itens] */
+  var MALA_COMP=[
+    ['feira','🏭','Feira / evento','camiseta ou polo · tênis · credencial','casual',['Credencial / inscrição','Sacola dobrável (catálogos)','Power bank']],
+    ['fornecedor','🤝','Fornecedor / reunião','camisa social · sapato · pasta','formal',['Pasta / mochila','Tabela de preços / amostras']],
+    ['passeio','🎉','Passeio / lazer','roupa casual · tênis de caminhada','casual',['Óculos de sol','Mochila pequena']],
+    ['estrada','🚗','Estrada / deslocamento','roupa confortável · CNH e documento','casual',['CNH + documento do carro','Carregador veicular']],
+    ['folga','🛋️','Folga / descanso','roupa de casa','casual',[]]
+  ];
+  var MALA_ATIV=[
+    ['corrida','🏃','Corrida','tênis · roupa de corrida · relógio','esporte',['Relógio + cabo de carregar','Squeeze','Boné']],
+    ['academia','🏋️','Academia','roupa de treino · toalha · squeeze','esporte',['Toalha pequena','Squeeze']],
+    ['piscina','🏊','Piscina / praia','sunga · toalha · chinelo','piscina',['Toalha','Chinelo','Protetor solar']],
+    ['jantar','🍽️','Jantar social','conta como dia formal: camisa + calça','formal',['Perfume','Cinto']]
+  ];
+  var MALA_CLIMA=[
+    ['sol','☀️','Dias de sol','protetor solar · óculos · boné',['Protetor solar','Óculos de sol','Boné']],
+    ['chuva','🌧️','Dias de chuva','guarda-chuva · corta-vento · +1 meia',['Guarda-chuva','Saco p/ roupa molhada']],
+    ['frio','❄️','Dias frios','2º casaco · blusa de manga longa',[]]
+  ];
+  var MALA_MOTIVO=[
+    ['trabalho','💼','Trabalho',['MacBook + carregador','Mouse','Cartões de visita','Caderno + caneta']],
+    ['lazer','🌴','Lazer',['Livro / Kindle','Câmera','Mochila de passeio','Caderno de viagem']],
+    ['misto','🔀','Misto',[]]
+  ];
+  var MALA_TRANSP=[
+    ['carro','🚗','Carro',['CNH + documento do carro','Carregador veicular']],
+    ['onibus','🚌','Ônibus',['Travesseiro de pescoço']],
+    ['aviao','✈️','Avião',['Líquidos ≤ 100 ml','Necessaire transparente']]
+  ];
+  var MALA_VOL=[['enxuta','Enxuta','sem folga'],['normal','Normal','+1 de folga'],['folgada','Folgada','+1 em tudo']];
+  var MALA_REGRAS_DEF={
+    cueca:{n:'Cuecas',eixo:'dias',porDia:1,folga:1},
+    meia:{n:'Meias',eixo:'dias',porDia:1,folga:1},
+    camisa:{n:'Camisa social',eixo:'formal',porDia:1,folga:0},
+    camiseta:{n:'Camiseta / polo',eixo:'casual',porDia:1,folga:0},
+    calcaF:{n:'Calça social',eixo:'formal',aCada:2},
+    calcaC:{n:'Calça jeans / bermuda',eixo:'casual',aCada:2},
+    espCima:{n:'Camiseta esportiva',eixo:'esporte',porDia:1,folga:0},
+    espMeia:{n:'Meias esportivas',eixo:'esporte',porDia:1,folga:0},
+    espShort:{n:'Short de corrida / treino',eixo:'esporte',aCada:2},
+    manga:{n:'Blusa manga longa',eixo:'frio',aCada:2}
+  };
+  var MALA_REG_ORD=['cueca','meia','camisa','camiseta','calcaF','calcaC','espCima','espShort','espMeia','manga'];
+  var malaWiz=null, malaCache=[], malaOff=false;
+
+  function dMalaBase(){
+    var b=VIA.get('mala_base',null); if(!b||typeof b!=='object')b={};
+    return {fixos:Array.isArray(b.fixos)?b.fixos:JSON.parse(JSON.stringify(MALA_FIX_DEF)),
+            regras:(b.regras&&typeof b.regras==='object')?b.regras:{},
+            extras:Array.isArray(b.extras)?b.extras:[]};
+  }
+  function dMalaCfg(){var c=VIA.get('mala_config',null);return (c&&typeof c==='object'&&c.dias)?c:null;}
+  function dMalaItens(){var a=VIA.get('mala_itens',null);return Array.isArray(a)?a:[];}
+  function malaInt(o,k){return Math.max(0,parseInt((o||{})[k],10)||0);}
+  function mQ(n,r,vol){
+    if(n<=0)return 0;
+    var q;
+    if(r.aCada)q=(vol==='enxuta')?Math.floor(n/r.aCada):Math.ceil(n/r.aCada);
+    else q=n*(r.porDia||1)+(vol==='enxuta'?0:(r.folga||0));
+    if(vol==='folgada')q+=1;
+    return Math.max(1,q);
+  }
+  function malaAtivs(base){
+    var l=MALA_ATIV.map(function(a){return {k:a[0],ic:a[1],nome:a[2],desc:a[3],eixo:a[4],itens:a[5]};});
+    (base.extras||[]).forEach(function(e){l.push({k:e.k,ic:e.ic||'⭐',nome:e.nome,desc:(e.itens||[]).join(' · '),eixo:e.eixo||'',itens:e.itens||[]});});
+    return l;
+  }
+  /* devolve a lista SUGERIDA a partir das respostas */
+  function malaCalc(cfg,base){
+    var vol=cfg.volume||'normal', D=Math.max(1,parseInt(cfg.dias,10)||1);
+    var comp=cfg.comp||{}, ativ=cfg.ativ||{}, cli=cfg.clima||{};
+    var ativs=malaAtivs(base);
+    var formais=malaInt(comp,'fornecedor'), casuais=0, esporte=0, piscina=0;
+    MALA_COMP.forEach(function(c){if(c[0]==='fornecedor')return;if(c[4]==='casual')casuais+=malaInt(comp,c[0]);});
+    ativs.forEach(function(a){var n=malaInt(ativ,a.k);if(!n)return;
+      if(a.eixo==='formal')formais+=n;else if(a.eixo==='esporte')esporte+=n;else if(a.eixo==='piscina')piscina+=n;else if(a.eixo==='casual')casuais+=n;});
+    var sol=malaInt(cli,'sol'), chuva=malaInt(cli,'chuva'), frio=malaInt(cli,'frio');
+    var out=[], RB=base.regras||{};
+    /* o kit base tem precedência: nada é repetido com nome igual (ex.: pijama, chinelo) */
+    var usados={};
+    function nk(s){return String(s==null?'':s).toLowerCase().trim();}
+    (base.fixos||[]).forEach(function(f){usados[nk(f.nome)]=1;});
+    function R(id){var r={};var d=MALA_REGRAS_DEF[id];for(var k in d)r[k]=d[k];var u=RB[id];if(u)for(var j in u)r[j]=u[j];return r;}
+    function put(k,nome,qtd,nota,mix){if(qtd>0&&!usados[nk(nome)]){usados[nk(nome)]=1;out.push({k:k,nome:nome,qtd:qtd,g:'roupas',nota:nota||'',mix:!!mix});}}
+    var eixos={dias:D,formal:formais,casual:casuais,esporte:esporte,frio:frio};
+    MALA_REG_ORD.forEach(function(id){
+      var r=R(id), n=eixos[r.eixo]||0, q=mQ(n,r,vol);
+      if(!q)return;
+      var nota='';
+      if(id==='meia'&&chuva>0){q+=1;nota=D+' dias + folga + 1 por dia de chuva';}
+      else if(r.aCada)nota='1 a cada '+r.aCada+' dias '+(r.eixo==='formal'?'formais':(r.eixo==='casual'?'casuais':(r.eixo==='esporte'?'de esporte':'frios')))+' ('+n+')';
+      else if(r.eixo==='dias')nota=D+' dias'+(vol==='enxuta'?'':' + folga');
+      else if(r.eixo==='esporte')nota='1 por sessão ('+n+')';
+      else nota='1 por dia '+(r.eixo==='formal'?'formal':'casual')+' ('+n+')';
+      put('r:'+id,r.n,q,nota,id==='meia'&&chuva>0);
+    });
+    put('r:pijama','Pijama',1,'sempre 1');
+    put('r:casaco','Casaco',frio>=2?2:1,frio>=2?('2 porque tem '+frio+' dias frios'):'1 fixo',frio>=2);
+    if(chuva>0)put('r:vento','Corta-vento / impermeável',1,chuva+(chuva===1?' dia':' dias')+' de chuva');
+    if(piscina>0)put('r:sunga','Sunga',1,'tem dia de piscina');
+    if(formais>0)put('r:sapato','Sapato social',1,'tem dia formal');
+    if(esporte>0||casuais>0){
+      var usos=[];if(esporte>0)usos.push('esporte');if(malaInt(comp,'feira')>0)usos.push('feira');if(malaInt(comp,'passeio')>0)usos.push('passeio');
+      put('r:tenis','Tênis',1,usos.length>1?('serve p/ '+usos.join(', ')+' — 1 par só'):'1 par',usos.length>1);
+    }
+    if(chuva>=2)put('r:calc2','Calçado extra',1,chuva+' dias de chuva — molhado não seca');
+    /* --- itens (quantidade 1), juntando repetidos --- */
+    var mapa={}, ordem=[];
+    function addI(nome,gr,sub){
+      var key='i:'+nk(nome);
+      if(mapa[key]){if(mapa[key].orig.indexOf(sub)<0)mapa[key].orig.push(sub);return;}
+      if(usados[nk(nome)])return;              /* já está no kit base ou nas roupas */
+      usados[nk(nome)]=1;
+      mapa[key]={k:key,nome:nome,qtd:1,g:gr,sub:sub,orig:[sub]};ordem.push(key);
+    }
+    var mot=cfg.motivo||'trabalho';
+    MALA_MOTIVO.forEach(function(m){
+      if(m[0]==='misto')return;
+      if(mot===m[0]||mot==='misto')m[3].forEach(function(it){addI(it,'fazer',m[1]+' '+m[2]);});
+    });
+    MALA_COMP.forEach(function(c){if(malaInt(comp,c[0])>0)c[5].forEach(function(it){addI(it,'fazer',c[1]+' '+c[2].split(' / ')[0]);});});
+    ativs.forEach(function(a){if(malaInt(ativ,a.k)>0)(a.itens||[]).forEach(function(it){addI(it,'fazer',a.ic+' '+a.nome.split(' / ')[0]);});});
+    MALA_TRANSP.forEach(function(t){if((cfg.transporte||'carro')===t[0])t[3].forEach(function(it){addI(it,'fazer',t[1]+' '+t[2]);});});
+    MALA_CLIMA.forEach(function(c){var n=malaInt(cli,c[0]);if(n>0)c[4].forEach(function(it){addI(it,'clima',c[1]+' '+n+(n===1?' dia':' dias')+' de '+c[2].split(' de ')[1]);});});
+    ordem.forEach(function(k){var it=mapa[k];
+      out.push({k:it.k,nome:it.nome,qtd:1,g:it.g,sub:it.sub,nota:it.orig.length>1?('pedido por '+it.orig.join(' e ')):'',mix:it.orig.length>1});});
+    /* fixos por último (grupo próprio) */
+    (base.fixos||[]).forEach(function(f){out.push({k:'f:'+f.id,nome:f.nome,qtd:f.qtd||1,g:'fixos',nota:'',mix:false});});
+    return out;
+  }
+  /* mescla com o que já existe: preserva marcados, quantidades editadas e itens manuais */
+  function malaMerge(sug,atuais){
+    var mapa={};(atuais||[]).forEach(function(it){mapa[it.k]=it;});
+    var out=sug.map(function(s){
+      var e=mapa[s.k]||{};
+      return {k:s.k,nome:s.nome,qtd:e.manual?e.qtd:s.qtd,sug:s.qtd,manual:!!e.manual,ok:!!e.ok,
+              g:s.g,sub:s.sub||'',nota:s.nota||'',mix:!!s.mix};
+    });
+    (atuais||[]).forEach(function(it){if(it.custom)out.push(it);});
+    return out;
+  }
+  function malaGerar(cfg){
+    var l=malaMerge(malaCalc(cfg,dMalaBase()),dMalaItens());
+    VIA.set('mala_config',cfg);VIA.set('mala_itens',l);return l;
+  }
+  function malaVis(l,cfg){var off=(cfg&&cfg.off)||[];return l.filter(function(it){return off.indexOf(it.k)<0;});}
+  function malaResumo(cfg){
+    var ch=[], base=dMalaBase(), m=cfg.motivo||'trabalho';
+    MALA_MOTIVO.forEach(function(x){if(x[0]===m)ch.push(x[1]+' '+x[2].toLowerCase());});
+    MALA_COMP.forEach(function(c){var n=malaInt(cfg.comp,c[0]);if(n)ch.push(c[1]+' '+n);});
+    malaAtivs(base).forEach(function(a){var n=malaInt(cfg.ativ,a.k);if(n)ch.push(a.ic+' '+n);});
+    MALA_CLIMA.forEach(function(c){var n=malaInt(cfg.clima,c[0]);if(n)ch.push(c[1]+' '+n);});
+    ch.push((cfg.volume||'normal'));
+    return ch;
+  }
+
+  /* ---------- tela: questionário ---------- */
+  function malaWizInit(){
+    var c=dMalaCfg(), dias=3, ini=VIA.get('data',null), fim=VIA.get('data_fim',null);
+    if(ini&&fim){var a=new Date(ini+'T12:00:00'),b=new Date(fim+'T12:00:00');
+      if(!isNaN(a)&&!isNaN(b)){var d=Math.round((b-a)/864e5)+1;if(d>0&&d<200)dias=d;}}
+    if(c)return JSON.parse(JSON.stringify(c));
+    return {dias:dias,motivo:(tripTheme()==='trabalho'?'trabalho':'lazer'),volume:'normal',
+            transporte:'carro',comp:{},ativ:{},clima:{},off:[]};
+  }
+  function mwRow(grupo,k,ic,nome,desc,val){
+    var on=val>0;
+    return '<div class="trow'+(on?' on':'')+'" id="mwr-'+grupo+'-'+k+'">'+
+      '<div class="tic" onclick="VUI.mwTog(\''+grupo+'\',\''+k+'\')">'+ic+'</div>'+
+      '<div class="tnm"><div class="a">'+esc(nome)+'</div><div class="b">'+esc(desc)+'</div></div>'+
+      '<div class="qs"><button onclick="VUI.mwq(\''+grupo+'\',\''+k+'\',-1)">−</button>'+
+      '<span class="v'+(on?'':' z')+'" id="mwv-'+grupo+'-'+k+'">'+val+'</span>'+
+      '<button onclick="VUI.mwq(\''+grupo+'\',\''+k+'\',1)">＋</button></div></div>';
+  }
+  function mwSegHtml(grupo,lista,atual){
+    return '<div class="seg" id="mwseg-'+grupo+'">'+lista.map(function(x){
+      return '<div class="'+(x[0]===atual?'on':'')+'" onclick="VUI.mwSeg(\''+grupo+'\',\''+x[0]+'\',this)">'+
+        (x[1]||'')+(x[2]?'<small>'+esc(x[2])+'</small>':'')+'</div>';}).join('')+'</div>';
+  }
+  function malaWizHtml(){
+    var w=malaWiz, base=dMalaBase();
+    var motSeg=MALA_MOTIVO.map(function(m){return [m[0],m[1]+' '+m[2],''];});
+    var volSeg=MALA_VOL.map(function(v){return [v[0],v[1],v[2]];});
+    var trSeg=MALA_TRANSP.map(function(t){return [t[0],t[1]+' '+t[2],''];});
+    var motAtual=MALA_MOTIVO.filter(function(m){return m[0]===w.motivo;})[0]||MALA_MOTIVO[0];
+    var motItens=(w.motivo==='misto')?MALA_MOTIVO[0][3].concat(MALA_MOTIVO[1][3]):motAtual[3];
+    var h='<div class="card" style="margin-top:2px">'+
+      '<div class="step-l"><span class="step-n">1</span> Quantos dias fora?</div>'+
+      '<div class="stp"><button onclick="VUI.mwDias(-1)">−</button><div><div class="n" id="mwDias">'+w.dias+'</div><div class="nu">dias</div></div><button onclick="VUI.mwDias(1)">＋</button></div>'+
+      '<div class="sub" style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+        (w.inicio?'📅 '+esc(fmtPeriodo(w.inicio,w.fim)||'')+' ':'')+
+        '<button class="linkbtn" style="padding:0;color:var(--accent);text-decoration:underline;font-weight:600" onclick="VUI.mwDatas()">usar datas</button></div>'+
+      '<div class="mini-l">Motivo da viagem</div>'+mwSegHtml('motivo',motSeg,w.motivo)+
+      '<div class="fold"><div class="foldl" onclick="VUI.fold(this)">acrescenta '+motItens.length+' itens <span class="fchev">▾</span></div>'+
+        '<div class="foldb" id="mwMot">'+esc(motItens.join(' · '))+'</div></div>'+
+      '<div class="mini-l">Volume da mala</div>'+mwSegHtml('volume',volSeg,w.volume)+
+      '</div>';
+    h+='<div class="card"><div class="step-l"><span class="step-n">2</span> Compromissos <span class="step-sum" id="mwSumC"></span></div>'+
+      '<div class="sub" style="font-size:.75rem;margin:6px 0 2px">Ocupam o dia — somam com os dias fora.</div><div style="margin-top:6px">'+
+      MALA_COMP.map(function(c){return mwRow('comp',c[0],c[1],c[2],c[3],malaInt(w.comp,c[0]));}).join('')+
+      '</div><div class="mnote" id="mwNoteC"></div></div>';
+    h+='<div class="card"><div class="step-l"><span class="step-n">3</span> Atividades <span class="step-sum" id="mwSumA"></span></div>'+
+      '<div class="sub" style="font-size:.75rem;margin:6px 0 2px">Em paralelo — <b>não</b> ocupam o dia.</div><div style="margin-top:6px">'+
+      malaAtivs(base).map(function(a){return mwRow('ativ',a.k,a.ic,a.nome,a.desc,malaInt(w.ativ,a.k));}).join('')+
+      '<button class="addlink" onclick="VUI.mwExtra()">＋ outra atividade (fica salva pras próximas)</button></div>'+
+      '<div class="fold"><div class="foldl" onclick="VUI.fold(this)">corrida e academia dividem itens <span class="fchev">▾</span></div>'+
+      '<div class="foldb">Tênis, squeeze e toalha entram <b>uma vez só</b> — não vira par de tênis duplicado.</div></div></div>';
+    h+='<div class="card"><div class="step-l"><span class="step-n">4</span> Clima <span class="step-sum" id="mwSumCl"></span></div>'+
+      '<div class="sub" style="font-size:.75rem;margin:6px 0 2px">Em dias — o mesmo dia pode ser frio <b>e</b> chuvoso.</div><div style="margin-top:6px">'+
+      MALA_CLIMA.map(function(c){return mwRow('clima',c[0],c[1],c[2],c[3],malaInt(w.clima,c[0]));}).join('')+
+      '</div><div class="mini-l">Como você vai</div>'+mwSegHtml('transporte',trSeg,w.transporte||'carro')+'</div>';
+    h+='<button class="btn" style="margin-top:16px" onclick="VUI.mwGerar()">Montar minha mala →<span class="mbtn-s" id="mwBtnS"></span></button>';
+    if(dMalaCfg())h+='<button class="btn soft" style="margin-top:10px" onclick="VUI.mwCancel()">Cancelar</button>';
+    return h;
+  }
+  function mwSync(){
+    var w=malaWiz;if(!w)return;
+    var el=document.getElementById('mwDias');if(el)el.textContent=w.dias;
+    function upd(grupo,lista){lista.forEach(function(k){
+      var v=malaInt(w[grupo],k), s=document.getElementById('mwv-'+grupo+'-'+k), r=document.getElementById('mwr-'+grupo+'-'+k);
+      if(s){s.textContent=v;s.className='v'+(v>0?'':' z');}
+      if(r){if(v>0)r.classList.add('on');else r.classList.remove('on');}});}
+    upd('comp',MALA_COMP.map(function(c){return c[0];}));
+    upd('ativ',malaAtivs(dMalaBase()).map(function(a){return a.k;}));
+    upd('clima',MALA_CLIMA.map(function(c){return c[0];}));
+    var somaC=0;MALA_COMP.forEach(function(c){somaC+=malaInt(w.comp,c[0]);});
+    var somaA=0;malaAtivs(dMalaBase()).forEach(function(a){somaA+=malaInt(w.ativ,a.k);});
+    var somaCl=0;MALA_CLIMA.forEach(function(c){somaCl+=malaInt(w.clima,c[0]);});
+    var sc=document.getElementById('mwSumC');if(sc)sc.textContent=somaC+'/'+w.dias+' dias';
+    var sa=document.getElementById('mwSumA');if(sa)sa.textContent=somaA?(somaA+(somaA===1?' sessão':' sessões')):'';
+    var scl=document.getElementById('mwSumCl');if(scl)scl.textContent=somaCl?(somaCl+' marcados'):'';
+    var nt=document.getElementById('mwNoteC');
+    if(nt){
+      if(somaC===w.dias){nt.className='mnote ok';nt.innerHTML='✓ '+somaC+' de '+w.dias+' dias distribuídos';}
+      else if(somaC===0){nt.className='mnote';nt.innerHTML='Ainda não distribuiu nenhum dia — dá pra montar assim mesmo.';}
+      else if(somaC<w.dias){nt.className='mnote';nt.innerHTML='Faltam '+(w.dias-somaC)+' de '+w.dias+' dias — tudo bem se algum dia for livre.';}
+      else{nt.className='mnote';nt.innerHTML=somaC+' marcados para '+w.dias+' dias — ok se um dia tem dois compromissos.';}
+    }
+    var bs=document.getElementById('mwBtnS');if(bs)bs.textContent=malaResumo(w).join(' · ');
+  }
+  /* ---------- tela: a mala montada ---------- */
+  function malaItemHtml(it,i){
+    var q=(it.g==='roupas'||it.custom)
+      ? '<div class="qs"><button onclick="VUI.mq('+i+',-1)">−</button><span class="v'+(it.manual?' ed':'')+'">'+it.qtd+'</span><button onclick="VUI.mq('+i+',1)">＋</button></div>'
+      : '<div class="mq">'+it.qtd+'</div>';
+    var nota=it.manual&&it.sug!==it.qtd
+      ? '<small class="mix" onclick="VUI.mqReset('+i+')">você ajustou · sugerido '+it.sug+' ↺</small>'
+      : (it.nota?'<small'+(it.mix?' class="mix"':'')+'>'+esc(it.nota)+'</small>':'');
+    return '<div class="mit'+(it.ok?' on':'')+'"><div class="mbox" onclick="VUI.mtog('+i+')">'+(it.ok?'✓':'')+'</div>'+
+      '<div class="mnm">'+esc(it.nome)+nota+'</div>'+q+
+      '<button class="mrow-x" onclick="VUI.mdel('+i+')">✕</button></div>';
+  }
+  function malaListHtml(){
+    var cfg=dMalaCfg(), l=malaVis(dMalaItens(),cfg);
+    malaCache=l;
+    var idx={};l.forEach(function(it,i){idx[it.k]=i;});
+    var tot=l.length, ok=l.filter(function(x){return x.ok;}).length;
+    var pct=tot?Math.round(ok/tot*100):0;
+    var pecas=l.filter(function(x){return x.g==='roupas';}).reduce(function(a,x){return a+(parseInt(x.qtd,10)||0);},0);
+    var per=fmtPeriodo(cfg.inicio||VIA.get('data',null),cfg.fim||VIA.get('data_fim',null));
+    var h='<div class="rhead"><div class="rh-top"><div class="rh-d">'+cfg.dias+' <small>dias'+(per?' · '+esc(per):'')+'</small></div>'+
+      '<button class="rh-e" onclick="VUI.mwAbrir()">✎ refazer</button></div>'+
+      '<div class="rchips">'+malaResumo(cfg).map(function(c){return '<span class="rchip">'+esc(c)+'</span>';}).join('')+'</div>'+
+      '<div class="mprog"><div class="mprog-h"><span><b>'+ok+'</b> de '+tot+' itens na mala</span><span>'+pecas+' peças de roupa</span></div>'+
+      '<div class="mbar"><i style="width:'+pct+'%"></i></div></div></div>';
+    var grupos=[['fixos','Fixos','✎ kit base','VUI.mKit()'],['roupas','Roupas','⚙ regras','VUI.mRegras()'],
+                ['fazer','Pelo que você vai fazer','',''],['clima','Pelo clima','','']];
+    grupos.forEach(function(g){
+      var itens=l.filter(function(x){return (x.g||'extra')===g[0];});
+      if(!itens.length)return;
+      h+='<div class="mgrp"><div class="mgrp-h"><span class="mgrp-t">'+esc(g[1])+'</span><span class="mgrp-c">'+itens.length+'</span>'+
+        (g[2]?'<button class="mgrp-a" onclick="'+g[3]+'">'+g[2]+'</button>':'')+'</div><div class="mlist">';
+      var sub='';
+      itens.forEach(function(it){
+        if(it.sub&&it.sub!==sub){sub=it.sub;h+='<div class="msub">'+esc(sub)+'</div>';}
+        h+=malaItemHtml(it,idx[it.k]);
+      });
+      h+='</div></div>';
+    });
+    var manuais=l.filter(function(x){return x.custom;});
+    if(manuais.length){
+      h+='<div class="mgrp"><div class="mgrp-h"><span class="mgrp-t">Meus itens</span><span class="mgrp-c">'+manuais.length+'</span></div><div class="mlist">';
+      manuais.forEach(function(it){h+=malaItemHtml(it,idx[it.k]);});h+='</div></div>';
+    }
+    h+='<button class="btn soft" style="margin-top:14px" onclick="VUI.mAdd()">＋ adicionar item à mala</button>';
+    var nOff=((cfg.off||[]).length);
+    if(nOff)h+='<button class="mundo" onclick="VUI.mRestaurar()">'+nOff+(nOff===1?' item removido':' itens removidos')+' · restaurar</button>';
+    return h;
+  }
+  function renderMala(){
+    if(!malaWiz&&!dMalaCfg())malaWiz=malaWizInit();
+    return malaWiz?malaWizHtml():malaListHtml();
+  }
+  function malaProgHome(){
+    var cfg=dMalaCfg();if(!cfg)return null;
+    var l=malaVis(dMalaItens(),cfg);
+    return {tot:l.length,ok:l.filter(function(x){return x.ok;}).length,dias:cfg.dias};
+  }
+  /* ---------- formulários da mala ---------- */
+  function malaKitForm(){
+    var b=dMalaBase();
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:4px">✎ Kit base</h2>'+
+      '<div class="sub" style="margin-bottom:12px">Itens que <b>sempre</b> vão, em qualquer viagem. Editar aqui vale também pras próximas.</div>'+
+      b.fixos.map(function(f,i){return '<div class="kbrow"><span class="kn">'+esc(f.nome)+'</span><span class="mq">'+(f.qtd||1)+'</span>'+
+        '<button class="mrow-x" onclick="VUI.mKitDel('+i+')">✕</button></div>';}).join('')+
+      '<label class="lbl" style="margin-top:12px">Novo item fixo</label><input class="f" id="kbNome" placeholder="ex.: Necessaire">'+
+      '<button class="btn" onclick="VUI.mKitAdd()">＋ Adicionar ao kit base</button>');
+  }
+  function malaRegrasForm(){
+    var b=dMalaBase();
+    var linhas=MALA_REG_ORD.map(function(id){
+      var d=MALA_REGRAS_DEF[id], u=(b.regras||{})[id]||{};
+      var porDia=(u.porDia!=null?u.porDia:d.porDia), folga=(u.folga!=null?u.folga:d.folga), aCada=(u.aCada!=null?u.aCada:d.aCada);
+      if(d.aCada)return '<div class="rgrow"><span class="rgn">'+esc(d.n)+'<br><span class="sub" style="font-size:.7rem">1 a cada N dias</span></span>'+
+        '<div><div class="rglbl">a cada</div><input id="rg-'+id+'-aCada" type="number" min="1" max="9" value="'+aCada+'"></div></div>';
+      return '<div class="rgrow"><span class="rgn">'+esc(d.n)+'<br><span class="sub" style="font-size:.7rem">por dia + folga</span></span>'+
+        '<div><div class="rglbl">por dia</div><input id="rg-'+id+'-porDia" type="number" min="0" max="9" value="'+porDia+'"></div>'+
+        '<div><div class="rglbl">folga</div><input id="rg-'+id+'-folga" type="number" min="0" max="9" value="'+folga+'"></div></div>';
+    }).join('');
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:4px">⚙ Regras das roupas</h2>'+
+      '<div class="sub" style="margin-bottom:10px">Quanto cada peça escala. Vale também pras próximas viagens.</div>'+
+      linhas+'<button class="btn" style="margin-top:14px" onclick="VUI.mRegrasSave()">Salvar e recalcular</button>');
+  }
+  function malaAddForm(){
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">＋ Item na mala</h2>'+
+      '<label class="lbl">O que é</label><input class="f" id="miNome" placeholder="ex.: Guarda-chuva pequeno">'+
+      '<label class="lbl">Quantidade</label><input class="f" id="miQtd" type="number" min="1" value="1">'+
+      '<button class="btn" onclick="VUI.mAddSave()">Adicionar</button>');
+  }
+  function malaExtraForm(){
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:4px">＋ Outra atividade</h2>'+
+      '<div class="sub" style="margin-bottom:12px">Fica salva no seu kit base e aparece nas próximas viagens.</div>'+
+      '<label class="lbl">Nome</label><input class="f" id="maNome" placeholder="ex.: Churrasco na fábrica">'+
+      '<label class="lbl">Ícone (1 emoji)</label><input class="f" id="maIc" maxlength="4" placeholder="⭐">'+
+      '<label class="lbl">Itens que ela leva (separados por vírgula)</label><textarea class="f" id="maItens" placeholder="ex.: bermuda, camiseta extra, chinelo"></textarea>'+
+      '<label class="lbl">Conta como que tipo de roupa?</label>'+
+      '<select class="f" id="maEixo"><option value="">nenhum (só itens)</option><option value="casual">casual (camiseta)</option><option value="formal">formal (camisa social)</option><option value="esporte">esporte</option></select>'+
+      '<button class="btn" onclick="VUI.mwExtraSave()">Criar atividade</button>');
+  }
+  function malaDatasForm(){
+    var w=malaWiz||{};
+    openSheet('<h2 style="font-size:1.05rem;margin-bottom:12px">📅 Datas da viagem</h2>'+
+      '<label class="lbl">Saída</label><input class="f" id="mdIni" type="date" value="'+esc(w.inicio||VIA.get('data','')||'')+'">'+
+      '<label class="lbl">Volta</label><input class="f" id="mdFim" type="date" value="'+esc(w.fim||VIA.get('data_fim','')||'')+'">'+
+      '<button class="btn" onclick="VUI.mwDatasSave()">Usar essas datas</button>');
   }
 
   /* ================= GASTOS ================= */
@@ -1322,7 +1794,7 @@
       '<label class="lbl">Data de início (opcional)</label><input class="f" id="nvData" type="date">'+
       '<button class="btn" onclick="VUI.novaViagemSave()">Criar viagem</button>');
   }
-  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',mapa:'📍 Mapa',restaurantes:'🍴 Restaurantes',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos',monitor:'📡 Monitoramento'};
+  var SEC_TITLES={inicio:'🏠 Início',roteiro:'🗺️ Roteiro',mapa:'📍 Mapa',restaurantes:'🍴 Restaurantes',mala:'🎒 Mala',checklist:'🧳 Checklist',gastos:'💸 Gastos',documentos:'📄 Documentos',monitor:'📡 Monitoramento'};
   var SEC_FAB={gastos:gastoForm,documentos:docForm,roteiro:function(){diaForm();},checklist:function(){secForm();}};
   function render(){
     var app=$('#app');
@@ -1348,6 +1820,10 @@
       if(back)back.style.display='flex';if(hdr){hdr.classList.add('withback');hdr.classList.add('onhero');}
       $('#hsub').textContent=cidade(espacoNome);
       var secs=SECOES.slice();
+      if(tripTheme()==='trabalho'){
+        secs=secs.filter(function(s){return !SEC_OFF_TRAB[s[3]];});
+        secs.splice(1,0,secs.splice(secs.map(function(s){return s[3];}).indexOf('mala'),1)[0]);
+      }
       if(dMeta().status==='Monitoramento')secs.splice(1,0,['📡','Monitoramento','voos & orçamento ao vivo','monitor']);
       var tiles=secs.map(function(s){return '<div class="tile" onclick="VUI.go(\''+s[3]+'\')"><div class="ic">'+s[0]+'</div><div class="t">'+esc(s[1])+'</div><div class="s">'+esc(s[2])+'</div></div>';}).join('');
       app.innerHTML=homeHero()+'<div class="grid">'+tiles+'</div>';
@@ -1357,26 +1833,32 @@
     if(back)back.style.display='flex';if(hdr)hdr.classList.add('withback');
     $('#hsub').textContent=(SEC_TITLES[view]||'').replace(/^\S+\s/,'');
     var _noTitle={mapa:1,restaurantes:1,monitor:1};
-    var _stitle=_noTitle[view]?'':'<div class="sec-title">'+esc(SEC_TITLES[view]||'')+'</div>';
+    var _t=(view==='mala'&&malaWiz)?'🎒 Montar a mala':(SEC_TITLES[view]||'');
+    var _stitle=_noTitle[view]?'':'<div class="sec-title">'+esc(_t)+'</div>';
     var html='';
     if(view==='inicio')html=renderInicio();
     else if(view==='roteiro')html=renderRoteiro();
     else if(view==='mapa')html=renderMapa();
     else if(view==='restaurantes')html=renderRestaurantes();
+    else if(view==='mala')html=renderMala();
     else if(view==='checklist')html=renderChecklist();
     else if(view==='gastos')html=renderGastos();
     else if(view==='documentos')html=renderDocumentos();
     else if(view==='monitor')html=renderMonitor();
     app.innerHTML=_stitle+html;
+    if(view==='mala'&&malaWiz)mwSync();
     if(SEC_FAB[view]&&fab){fab.style.display='flex';}
   }
 
   /* ================= AÇÕES (globais p/ onclick) ================= */
   window.VUI={
-    go:function(v){view=v;render();window.scrollTo(0,0);},
+    go:function(v){if(view==='mala'&&v!=='mala'&&malaWiz&&dMalaCfg())malaWiz=null;view=v;render();window.scrollTo(0,0);},
     tema:function(){var t=tripTheme(),nx=(curTheme(t)==='dark')?'light':'dark';try{localStorage.setItem('via_th_'+t,nx);}catch(e){}applyTheme();render();},
     home:function(){view='home';render();window.scrollTo(0,0);},
-    back:function(){if(view!=='home'){view='home';render();}else{espacoId=null;espacoNome='';dados={};view='home';render();}window.scrollTo(0,0);},
+    back:function(){
+      if(view==='mala'&&malaWiz&&dMalaCfg()){malaWiz=null;render();return;}
+      if(view!=='home'){malaWiz=null;view='home';render();}
+      else{espacoId=null;espacoNome='';dados={};malaWiz=null;view='home';render();}window.scrollTo(0,0);},
     abrir:function(id){abrirViagem(id);},
     novaViagem:novaViagemForm,
     novaViagemSave:async function(){var nome=($('#nvNome').value||'').trim();var data=$('#nvData').value;if(!nome){toast('Dê um nome à viagem.');return;}await criarEspaco(nome);if(data)VIA.set('data',data);},
@@ -1427,7 +1909,7 @@
       if(!divide.length){toast('Marque quem divide.');return;}
       var gs=dGastos();gs.push({id:Date.now(),desc:desc,cat:cat,moeda:moeda,valor:val,data:data,pagou:pagou,divide:divide});VIA.set('gastos',gs);closeSheet();render();toast('Gasto lançado ✓');},
     gastoDel:function(id){var gs=dGastos().filter(function(g){return g.id!==id;});VIA.set('gastos',gs);render();},
-    metaSave:async function(){var t=parseFloat(($('#mTotal').value||'').replace(',','.'))||80000,c=parseFloat(($('#mCambio').value||'').replace(',','.'))||5;var stEl=$('#mStatus'),st=(stEl&&STATUS_META[stEl.value])?stEl.value:'Planejando';await VIA.set('meta',{total:t,cambio:c,status:st});closeSheet();espacos=await carregarEspacos();render();toast('Meta atualizada ✓');},
+    metaSave:async function(){var t=parseFloat(($('#mTotal').value||'').replace(',','.'))||80000,c=parseFloat(($('#mCambio').value||'').replace(',','.'))||5;var stEl=$('#mStatus'),st=(stEl&&STATUS_META[stEl.value])?stEl.value:'Planejando';await VIA.set('meta',{total:t,cambio:c,status:st,tema:dMeta().tema});closeSheet();espacos=await carregarEspacos();render();toast('Meta atualizada ✓');},
     docForm:docForm, docEdit:function(id){docForm(id);}, docMulti:docMulti,
     docGroup:function(t){docGroupsOpen[t]=!docGroupsOpen[t];render();},
     docSave:async function(id){var nome=$('#dNome').value.trim();if(!nome){toast('Dê um nome ao documento.');return;}
@@ -1491,6 +1973,90 @@
       toast('Buscando '+(est<=3?'3★+':'4★')+' nota '+nota.toString().replace('.',',')+'+ até € '+v+'…');
       monitorRender('monWrap');
     },
+    /* ---------- MALA ---------- */
+    fold:function(el){var w=el.parentNode;if(w)w.classList.toggle('open');},
+    mwAbrir:function(){malaWiz=malaWizInit();view='mala';render();window.scrollTo(0,0);},
+    mwCancel:function(){malaWiz=null;render();},
+    mwDias:function(d){var w=malaWiz;if(!w)return;w.dias=Math.max(1,Math.min(120,(parseInt(w.dias,10)||1)+d));mwSync();},
+    mwq:function(grupo,k,d){var w=malaWiz;if(!w)return;w[grupo]=w[grupo]||{};
+      w[grupo][k]=Math.max(0,Math.min(120,malaInt(w[grupo],k)+d));mwSync();},
+    mwTog:function(grupo,k){var w=malaWiz;if(!w)return;w[grupo]=w[grupo]||{};
+      if(malaInt(w[grupo],k)>0){w[grupo][k]=0;}
+      else if(grupo==='ativ'){w[grupo][k]=Math.max(1,Math.floor((parseInt(w.dias,10)||1)/2));}
+      else if(grupo==='comp'){var s=0;MALA_COMP.forEach(function(c){s+=malaInt(w.comp,c[0]);});w[grupo][k]=Math.max(1,(parseInt(w.dias,10)||1)-s);}
+      else{w[grupo][k]=parseInt(w.dias,10)||1;}
+      mwSync();},
+    mwSeg:function(grupo,val,el){var w=malaWiz;if(!w)return;w[grupo]=val;
+      var p=el.parentNode;[].forEach.call(p.children,function(c){c.classList.remove('on');});el.classList.add('on');
+      if(grupo==='motivo'){var m=MALA_MOTIVO.filter(function(x){return x[0]===val;})[0]||MALA_MOTIVO[0];
+        var its=(val==='misto')?MALA_MOTIVO[0][3].concat(MALA_MOTIVO[1][3]):m[3];
+        var b=document.getElementById('mwMot');if(b){b.textContent=its.join(' · ');
+          var lk=b.parentNode.querySelector('.foldl');if(lk)lk.innerHTML='acrescenta '+its.length+' itens <span class="fchev">▾</span>';}}
+      mwSync();},
+    mwDatas:malaDatasForm,
+    mwDatasSave:function(){var i=$('#mdIni').value,f=$('#mdFim').value;
+      if(!i||!f){toast('Escolha as duas datas.');return;}
+      var a=new Date(i+'T12:00:00'),b=new Date(f+'T12:00:00');
+      var d=Math.round((b-a)/864e5)+1;
+      if(isNaN(d)||d<1){toast('A volta tem que ser depois da saída.');return;}
+      malaWiz.inicio=i;malaWiz.fim=f;malaWiz.dias=Math.min(120,d);
+      VIA.set('data',i);VIA.set('data_fim',f);
+      closeSheet();render();toast(d+(d===1?' dia':' dias')+' ✓');},
+    mwExtra:malaExtraForm,
+    mwExtraSave:function(){
+      var nome=($('#maNome').value||'').trim();if(!nome){toast('Dê um nome à atividade.');return;}
+      var b=dMalaBase();
+      b.extras.push({k:'x'+Date.now(),nome:nome,ic:($('#maIc').value||'⭐').trim()||'⭐',
+        eixo:$('#maEixo').value||'',
+        itens:($('#maItens').value||'').split(',').map(function(s){return s.trim();}).filter(Boolean)});
+      VIA.set('mala_base',b);closeSheet();render();toast('Atividade criada ✓');},
+    mwGerar:function(){
+      var w=malaWiz;if(!w)return;
+      if(!w.inicio&&VIA.get('data',null))w.inicio=VIA.get('data',null);
+      if(!w.fim&&VIA.get('data_fim',null))w.fim=VIA.get('data_fim',null);
+      w.off=w.off||[];
+      var antes=dMalaItens().length;
+      malaGerar(w);malaWiz=null;render();window.scrollTo(0,0);
+      toast(antes?'Mala atualizada ✓':'Mala montada ✓');},
+    mtog:function(i){var it=malaCache[i];if(!it)return;
+      var l=dMalaItens();var t=l.filter(function(x){return x.k===it.k;})[0];if(!t)return;
+      t.ok=!t.ok;it.ok=t.ok;VIA.set('mala_itens',l);render();},
+    mq:function(i,d){var it=malaCache[i];if(!it)return;
+      var l=dMalaItens();var t=l.filter(function(x){return x.k===it.k;})[0];if(!t)return;
+      t.qtd=Math.max(1,(parseInt(t.qtd,10)||1)+d);t.manual=true;VIA.set('mala_itens',l);render();},
+    mqReset:function(i){var it=malaCache[i];if(!it)return;
+      var l=dMalaItens();var t=l.filter(function(x){return x.k===it.k;})[0];if(!t)return;
+      t.qtd=t.sug;t.manual=false;VIA.set('mala_itens',l);render();toast('Voltou pro sugerido ✓');},
+    mdel:function(i){var it=malaCache[i];if(!it)return;
+      var l=dMalaItens();
+      if(it.custom){VIA.set('mala_itens',l.filter(function(x){return x.k!==it.k;}));render();return;}
+      var cfg=dMalaCfg();if(!cfg)return;cfg.off=(cfg.off||[]).concat([it.k]);VIA.set('mala_config',cfg);render();
+      toast('Item removido — dá pra restaurar no fim da lista.');},
+    mRestaurar:function(){var cfg=dMalaCfg();if(!cfg)return;cfg.off=[];VIA.set('mala_config',cfg);render();toast('Itens restaurados ✓');},
+    mAdd:malaAddForm,
+    mAddSave:function(){var nome=($('#miNome').value||'').trim();if(!nome){toast('Escreva o item.');return;}
+      var q=Math.max(1,parseInt($('#miQtd').value,10)||1);
+      var l=dMalaItens();l.push({k:'c'+Date.now(),nome:nome,qtd:q,sug:q,manual:false,ok:false,g:'extra',sub:'',nota:'',custom:true});
+      VIA.set('mala_itens',l);closeSheet();render();toast('Item adicionado ✓');},
+    mKit:malaKitForm,
+    mKitDel:function(i){var b=dMalaBase();b.fixos.splice(i,1);VIA.set('mala_base',b);
+      var cfg=dMalaCfg();if(cfg)malaGerar(cfg);malaKitForm();render();},
+    mKitAdd:function(){var n=($('#kbNome').value||'').trim();if(!n){toast('Escreva o item.');return;}
+      var b=dMalaBase();b.fixos.push({id:'k'+Date.now(),nome:n,qtd:1});VIA.set('mala_base',b);
+      var cfg=dMalaCfg();if(cfg)malaGerar(cfg);malaKitForm();render();toast('Entrou no kit base ✓');},
+    mRegras:malaRegrasForm,
+    mRegrasSave:function(){
+      var b=dMalaBase();b.regras=b.regras||{};
+      MALA_REG_ORD.forEach(function(id){
+        var d=MALA_REGRAS_DEF[id], o={};
+        if(d.aCada){var a=document.getElementById('rg-'+id+'-aCada');if(a)o.aCada=Math.max(1,parseInt(a.value,10)||d.aCada);}
+        else{var p=document.getElementById('rg-'+id+'-porDia'),f=document.getElementById('rg-'+id+'-folga');
+          if(p)o.porDia=Math.max(0,parseInt(p.value,10)||0);
+          if(f)o.folga=Math.max(0,parseInt(f.value,10)||0);}
+        b.regras[id]=o;});
+      VIA.set('mala_base',b);
+      var cfg=dMalaCfg();if(cfg)malaGerar(cfg);
+      closeSheet();render();toast('Regras salvas e recalculadas ✓');},
     fab:function(){if(!espacoId){novaViagemForm();return;}var f=SEC_FAB[view];if(f)f();}
   };
 
